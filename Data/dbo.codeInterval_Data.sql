@@ -1,0 +1,10 @@
+SET IDENTITY_INSERT [dbo].[codeInterval] ON
+INSERT INTO [dbo].[codeInterval] ([codeIntervalPK], [IntervalDescription], [IntervalMaxMonth], [IntervalName]) VALUES (1, 'within one month of target childs birth/ one month                                                  ', 3, '          ')
+INSERT INTO [dbo].[codeInterval] ([codeIntervalPK], [IntervalDescription], [IntervalMaxMonth], [IntervalName]) VALUES (2, 'Target child is 6 months old                                                                        ', 9, '          ')
+INSERT INTO [dbo].[codeInterval] ([codeIntervalPK], [IntervalDescription], [IntervalMaxMonth], [IntervalName]) VALUES (3, 'Target child is 1 year old                                                                          ', 18, '          ')
+INSERT INTO [dbo].[codeInterval] ([codeIntervalPK], [IntervalDescription], [IntervalMaxMonth], [IntervalName]) VALUES (4, 'Target child is 2 years old.                                                                        ', 30, '          ')
+INSERT INTO [dbo].[codeInterval] ([codeIntervalPK], [IntervalDescription], [IntervalMaxMonth], [IntervalName]) VALUES (5, 'Target child is 3 years old.                                                                        ', 42, '          ')
+INSERT INTO [dbo].[codeInterval] ([codeIntervalPK], [IntervalDescription], [IntervalMaxMonth], [IntervalName]) VALUES (6, 'Target child is 4 years old.                                                                        ', 54, '          ')
+INSERT INTO [dbo].[codeInterval] ([codeIntervalPK], [IntervalDescription], [IntervalMaxMonth], [IntervalName]) VALUES (7, 'Target child is 5 years old.                                                                        ', 66, '          ')
+INSERT INTO [dbo].[codeInterval] ([codeIntervalPK], [IntervalDescription], [IntervalMaxMonth], [IntervalName]) VALUES (8, 'At discharge                                                                                        ', 100, '          ')
+SET IDENTITY_INSERT [dbo].[codeInterval] OFF

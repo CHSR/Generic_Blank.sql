@@ -57,6 +57,25 @@
     <DataWriteAllFilesInOneDirectory>True</DataWriteAllFilesInOneDirectory>
   </WriteToFileOptions>
   <DataFileSet>
-    <Count>0</Count>
+    <Count>19</Count>
+    <DataFile>dbo.codeApp_Data.sql</DataFile>
+    <DataFile>dbo.codeAuditC_Data.sql</DataFile>
+    <DataFile>dbo.codeCaseProgress_Data.sql</DataFile>
+    <DataFile>dbo.codeCounty_Data.sql</DataFile>
+    <DataFile>dbo.codeDischarge_Data.sql</DataFile>
+    <DataFile>dbo.codeDueByDates_Data.sql</DataFile>
+    <DataFile>dbo.codeERHospitalReasons_Data.sql</DataFile>
+    <DataFile>dbo.codeForm_Data.sql</DataFile>
+    <DataFile>dbo.codeInterval_Data.sql</DataFile>
+    <DataFile>dbo.codeLevel_Data.sql</DataFile>
+    <DataFile>dbo.codeMedicalItem_Data.sql</DataFile>
+    <DataFile>dbo.codePerformanceTargetTitle_Data.sql</DataFile>
+    <DataFile>dbo.codeRegion_Data.sql</DataFile>
+    <DataFile>dbo.codeReportCatalog_Data.sql</DataFile>
+    <DataFile>dbo.codeServiceReferral_Data.sql</DataFile>
+    <DataFile>dbo.codeTopic_Data.sql</DataFile>
+    <DataFile>dbo.scoreASQ_Data.sql</DataFile>
+    <DataFile>dbo.scoreASQSE_Data.sql</DataFile>
+    <DataFile>dbo.codeTraining_Data.sql</DataFile>
   </DataFileSet>
 </DatabaseInformation>
