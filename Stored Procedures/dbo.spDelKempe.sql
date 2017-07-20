@@ -1,0 +1,13 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[spDelKempe](@KempePK int)
+
+AS
+
+
+DELETE 
+FROM Kempe
+WHERE KempePK = @KempePK
+GO

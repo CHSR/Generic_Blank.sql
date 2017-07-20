@@ -1,0 +1,81 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[spAddCriticalIncident](@ActionTaken varchar(1000)=NULL,
+@AssignedWorkerFK int=NULL,
+@CriticalIncidentCreator char(10)=NULL,
+@CriticalIncidentDate datetime=NULL,
+@DYFSReportMade char(1)=NULL,
+@DYFSReportSubstantiated char(1)=NULL,
+@FollowUpDue datetime=NULL,
+@FollowUpRequired char(1)=NULL,
+@HVCaseFK int=NULL,
+@IncidentDescription varchar(1000)=NULL,
+@IncidentReportedBy varchar(30)=NULL,
+@IncidentReportedTo varchar(30)=NULL,
+@IncidentResolved bit=NULL,
+@IncidentTime char(5)=NULL,
+@PCANJNotifiedDate datetime=NULL,
+@PCNJIncidentReportedTo char(2)=NULL,
+@PCNJNotificationReceived datetime=NULL,
+@PCNJReportedVia char(2)=NULL,
+@ProgramFK int=NULL,
+@ServiceLevelFK int=NULL,
+@SiteInformedDate datetime=NULL,
+@StaffReport char(1)=NULL,
+@SupervisorFK int=NULL)
+AS
+INSERT INTO CriticalIncident(
+ActionTaken,
+AssignedWorkerFK,
+CriticalIncidentCreator,
+CriticalIncidentDate,
+DYFSReportMade,
+DYFSReportSubstantiated,
+FollowUpDue,
+FollowUpRequired,
+HVCaseFK,
+IncidentDescription,
+IncidentReportedBy,
+IncidentReportedTo,
+IncidentResolved,
+IncidentTime,
+PCANJNotifiedDate,
+PCNJIncidentReportedTo,
+PCNJNotificationReceived,
+PCNJReportedVia,
+ProgramFK,
+ServiceLevelFK,
+SiteInformedDate,
+StaffReport,
+SupervisorFK
+)
+VALUES(
+@ActionTaken,
+@AssignedWorkerFK,
+@CriticalIncidentCreator,
+@CriticalIncidentDate,
+@DYFSReportMade,
+@DYFSReportSubstantiated,
+@FollowUpDue,
+@FollowUpRequired,
+@HVCaseFK,
+@IncidentDescription,
+@IncidentReportedBy,
+@IncidentReportedTo,
+@IncidentResolved,
+@IncidentTime,
+@PCANJNotifiedDate,
+@PCNJIncidentReportedTo,
+@PCNJNotificationReceived,
+@PCNJReportedVia,
+@ProgramFK,
+@ServiceLevelFK,
+@SiteInformedDate,
+@StaffReport,
+@SupervisorFK
+)
+
+SELECT SCOPE_IDENTITY() AS [SCOPE_IDENTITY]
+GO

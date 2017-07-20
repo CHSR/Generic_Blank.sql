@@ -1,0 +1,14 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[spGetIntakebyPK]
+
+(@IntakePK int)
+AS
+SET NOCOUNT ON;
+
+SELECT * 
+FROM Intake
+WHERE IntakePK = @IntakePK
+GO

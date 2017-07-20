@@ -1,0 +1,13 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[spDelTCMedical](@TCMedicalPK int)
+
+AS
+
+
+DELETE 
+FROM TCMedical
+WHERE TCMedicalPK = @TCMedicalPK
+GO

@@ -1,0 +1,14 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[spGetSubTopicbyPK]
+
+(@SubTopicPK int)
+AS
+SET NOCOUNT ON;
+
+SELECT * 
+FROM SubTopic
+WHERE SubTopicPK = @SubTopicPK
+GO

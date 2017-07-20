@@ -1,0 +1,13 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[spDelPCProgram](@PCProgramPK int)
+
+AS
+
+
+DELETE 
+FROM PCProgram
+WHERE PCProgramPK = @PCProgramPK
+GO

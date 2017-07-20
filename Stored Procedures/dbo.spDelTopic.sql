@@ -1,0 +1,13 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[spDelTopic](@TopicPK int)
+
+AS
+
+
+DELETE 
+FROM Topic
+WHERE TopicPK = @TopicPK
+GO

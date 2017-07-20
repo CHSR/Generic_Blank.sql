@@ -1,0 +1,14 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE PROCEDURE [dbo].[spGetWorkerbyPK]
+
+(@WorkerPK int)
+AS
+SET NOCOUNT ON;
+
+SELECT * 
+FROM Worker
+WHERE WorkerPK = @WorkerPK
+GO
