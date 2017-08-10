@@ -68,7 +68,7 @@ set @programfk = REPLACE(@programfk,'"','')
 				join dbo.SplitString(@programfk,',') on cp1.programfk = listitem
 				inner join dbo.udfCaseFilters(@casefilterspositive, '', @programfk) cf on cf.HVCaseFK = cp1.HVCaseFK
 				inner join WorkerProgram wp1 on wp1.WorkerFK = cp1.CurrentFSWFK AND wp1.programfk = listitem
-				where VisitType <> '0001'
+				where VisitType <> '00010'
 					 and cast(VisitStartTime AS DATE) <= @EndDt
 					 and cast(VisitStartTime AS DATE) >= c.IntakeDate
 					 and HVLog.HVCaseFK = c.HVCasePK

@@ -23,7 +23,6 @@ CREATE PROCEDURE [dbo].[spAddHVProgram](@ContractEndDate datetime=NULL,
 @LeadAgencyStreet char(40)=NULL,
 @LeadAgencyZip char(10)=NULL,
 @ModemNumber char(12)=NULL,
-@ProgramCapacity int=NULL,
 @ProgramCity char(20)=NULL,
 @ProgramCode char(3)=NULL,
 @ProgramFaxNumber char(12)=NULL,
@@ -32,8 +31,9 @@ CREATE PROCEDURE [dbo].[spAddHVProgram](@ContractEndDate datetime=NULL,
 @ProgramPhone char(12)=NULL,
 @ProgramStreet char(40)=NULL,
 @ProgramZip char(10)=NULL,
-@RegionFK int=NULL,
-@TargetZip nvarchar(500)=NULL)
+@TargetZip nvarchar(500)=NULL,
+@ProgramCapacity int=NULL,
+@RegionFK int=NULL)
 AS
 INSERT INTO HVProgram(
 ContractEndDate,
@@ -57,7 +57,6 @@ LeadAgencyName,
 LeadAgencyStreet,
 LeadAgencyZip,
 ModemNumber,
-ProgramCapacity,
 ProgramCity,
 ProgramCode,
 ProgramFaxNumber,
@@ -66,8 +65,9 @@ ProgramName,
 ProgramPhone,
 ProgramStreet,
 ProgramZip,
-RegionFK,
-TargetZip
+TargetZip,
+ProgramCapacity,
+RegionFK
 )
 VALUES(
 @ContractEndDate,
@@ -91,7 +91,6 @@ VALUES(
 @LeadAgencyStreet,
 @LeadAgencyZip,
 @ModemNumber,
-@ProgramCapacity,
 @ProgramCity,
 @ProgramCode,
 @ProgramFaxNumber,
@@ -100,8 +99,9 @@ VALUES(
 @ProgramPhone,
 @ProgramStreet,
 @ProgramZip,
-@RegionFK,
-@TargetZip
+@TargetZip,
+@ProgramCapacity,
+@RegionFK
 )
 
 SELECT SCOPE_IDENTITY() AS [SCOPE_IDENTITY]

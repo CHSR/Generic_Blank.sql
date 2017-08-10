@@ -12,7 +12,7 @@ GO
 -- added: How to handle some special url redirections - bug# HW946 ... Khalsa 3/7/2014
 -- 
 -- =============================================
-CREATE procedure [dbo].[spGetAllFormsForSupervisorReview]
+CREATE PROCEDURE [dbo].[spGetAllFormsForSupervisorReview]
 	(
 	@ProgramFK int
 	, @DaysToLoad int=30
@@ -47,10 +47,10 @@ begin
 		select FormReviewPK
 			  ,PC1ID
 			  ,codeFormName
-			  ,convert(varchar(10),FormDate,101) as FormDate
+			  ,convert(varchar(10),FormDate,111) as FormDate
 			  ,FormFK
 			  --,FormReviewCreateDate
-			  ,convert(varchar(10),FormReviewCreateDate,101) as FormReviewCreateDate
+			  ,convert(varchar(10),FormReviewCreateDate,111) as FormReviewCreateDate
 			  ,FormReviewCreator
 			  ,FormReviewEditDate
 			  ,FormReviewEditor
@@ -67,7 +67,8 @@ begin
 					when fr.FormType='PA' then 'preassessment.aspx?pc1id='+PC1ID+ '&papk=' + convert(varchar,FormFK)		  -- Note: here we use preassessment.aspx
 					when fr.FormType='PI' then 'PreIntake.aspx?pc1id='+PC1ID+ '&pipk=' + convert(varchar,FormFK)		  -- Note: here we use PreIntakes.aspx
 					when fr.FormType='SR' then 'ServiceReferral.aspx?pc1id='+PC1ID+ '&srpk=' + convert(varchar,FormFK)		  -- Note: here we use ServiceReferral.aspx
-					when fr.FormType='VL' then 'HomeVisitLog.aspx?pc1id='+PC1ID+ '&hvlogpk=' + convert(varchar,FormFK)		  -- Note: here we use HomeVisitLogs.aspx
+					when fr.FormType='VL' AND fr.FormDate > '2017-06-05 00:00:00.000' THEN 'HomeVisitLog.aspx?pc1id='+PC1ID+ '&hvlogpk=' + convert(varchar,FormFK)		  -- Note: here we use HomeVisitLogs.aspx
+					when fr.FormType='VL' AND fr.FormDate <= '2017-06-05 00:00:00.000' then 'HomeVisitLogOld.aspx?pc1id='+PC1ID+ '&hvlogpk=' + convert(varchar,FormFK)		  -- Note: here we use HomeVisitLogs.aspx
 					when fr.FormType='ID' then 'IdContactInformation.aspx?pc1id='+PC1ID		  -- Note: here we use IdContactInformation.aspx
 					when fr.FormType='IN' then 'Intake.aspx?pc1id='+PC1ID+ '&ipk=' + convert(varchar,FormFK)		  -- Note: here we use Intake.aspx
 					when fr.FormType='DS' then 'PreDischarge.aspx?pc1id='+PC1ID	-- Note: here we use PreDischarge.aspx
@@ -97,6 +98,7 @@ begin
 		inner join codeForm f on codeFormAbbreviation = fr.FormType
 		inner join CaseProgram cp on cp.HVCaseFK = fr.HVCaseFK
 									and cp.ProgramFK = fr.ProgramFK
+		LEFT OUTER JOIN HVLog vl ON vl.ProgramFK = cp.ProgramFK AND fr.FormType = 'VL' AND fr.FormFK = vl.HVLogPK
 		left outer join WorkerProgram wpfsw on wpfsw.WorkerFK = cp.CurrentFSWFK and wpfsw.ProgramFK = @ProgramFK
 		left outer join WorkerProgram wpfaw on wpfaw.WorkerFK = cp.CurrentFAWFK and wpfaw.ProgramFK = @ProgramFK
 		left outer join Worker wfsw on wfsw.WorkerPK = wpfsw.WorkerFK
@@ -107,6 +109,7 @@ begin
 				and ReviewedBy is null
 				and FormDate between FormReviewStartDate and isnull(FormReviewEndDate, current_timestamp)
 				and FormDate between dateadd(day, @DaysToLoad*-1, isnull(FormReviewEndDate, current_timestamp)) and isnull(FormReviewEndDate, current_timestamp) 
+				AND CASE WHEN fr.FormType = 'VL' THEN CONVERT(CHAR(1), FormComplete) ELSE '1' END = '1'
 		union all 
 		select FormReviewPK
 			  ,case when len(rtrim(TrainingTitle)) <= 16 

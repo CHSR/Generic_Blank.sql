@@ -66,7 +66,7 @@ select hv.HVCaseFK
 		left join codeLevel cl on cp.CurrentLevelFK = cl.codeLevelPK
 		inner join Worker w on w.WorkerPK = cp.CurrentFSWFK
 		where cp.ProgramFK = @ProgramFK 
-				and hv.VisitType <> '0001'
+				and hv.VisitType <> '00010'
 				and VisitStartTime >= @CutOffDate AND hv.VisitStartTime <=  @endDt
 				--and (cp.DischargeDate IS NULL  
 				--		or cp.DischargeDate > @LastDayofPreviousMonth)

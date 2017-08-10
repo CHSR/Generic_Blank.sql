@@ -132,3 +132,5 @@ ALTER TABLE [dbo].[Preassessment] WITH NOCHECK ADD CONSTRAINT [FK_Preassessment_
 GO
 ALTER TABLE [dbo].[Preassessment] WITH NOCHECK ADD CONSTRAINT [FK_Preassessment_ProgramFK] FOREIGN KEY ([ProgramFK]) REFERENCES [dbo].[HVProgram] ([HVProgramPK])
 GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'Preassessment', 'COLUMN', N'PreassessmentPK'
+GO

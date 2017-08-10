@@ -56,7 +56,7 @@ begin
 							   and hvr.programfk = hld.programfk) as levelstart
 					,(reqvisit) as expvisitcount
 					,sum(case
-							 when visittype <> '0001' then
+							 when visittype <> '00010' then
 								 1
 							 else
 								 0
@@ -68,7 +68,7 @@ begin
 								 0
 						 end) as inhomevisitcount
 					,sum(case
-							 when visittype = '0001' then
+							 when visittype = '00010' then
 								 1
 							 else
 								 0

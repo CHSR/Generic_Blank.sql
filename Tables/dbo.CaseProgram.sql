@@ -109,3 +109,5 @@ ALTER TABLE [dbo].[CaseProgram] WITH NOCHECK ADD CONSTRAINT [FK_CaseProgram_Prog
 GO
 ALTER TABLE [dbo].[CaseProgram] WITH NOCHECK ADD CONSTRAINT [FK_CaseProgram_TransferredtoProgramFK] FOREIGN KEY ([TransferredtoProgramFK]) REFERENCES [dbo].[HVProgram] ([HVProgramPK])
 GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'CaseProgram', 'COLUMN', N'CaseProgramPK'
+GO

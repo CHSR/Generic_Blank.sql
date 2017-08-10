@@ -43,6 +43,7 @@ LEFT JOIN Training t on ta.TrainingFK = t.TrainingPK
 LEFT JOIN TrainingDetail td on td.TrainingFK=t.TrainingPK
 LEFT join codeTopic cdT on cdT.codeTopicPK=td.TopicFK
 where (cdT.TopicCode = 42.0)
+AND t.TrainingDate BETWEEN @sdate AND @edate
 )
 
 , cteFinal AS (
@@ -57,7 +58,6 @@ where (cdT.TopicCode = 42.0)
 			, cteAbuseTraining.TrainingTitle
 		FROM cteEventDates 
 		LEFT JOIN cteAbuseTraining ON cteAbuseTraining.WorkerPK = cteEventDates.WorkerPK
-		WHERE corr=1
 		GROUP BY cteEventDates.WorkerName, cteEventDates.HireDate, [AbuseTrainingDt], cteEventDates.workerpk
 		,  [TrainingExempt], TotalCounter, cteAbuseTraining.TrainingTitle
 )

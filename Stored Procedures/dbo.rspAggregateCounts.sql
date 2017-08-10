@@ -453,7 +453,7 @@ begin
 		  from HVLog
 		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
 		  where convert(date, VisitStartTime) <= @EndDate
-				and VisitType <> '0001'
+				and VisitType <> '00010'
 		)
 	,
 	/* 
@@ -465,7 +465,7 @@ begin
 		  from HVLog
 		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
 		  where convert(date, VisitStartTime) <= @EndDate
-				and VisitType = '0001'
+				and VisitType = '00010'
 		)
 	,
 	/* 
@@ -488,7 +488,7 @@ begin
 		  from HVLog
 		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
 		  where convert(date, VisitStartTime) between @StartDate and @EndDate
-				and VisitType <> '0001'
+				and VisitType <> '00010'
 		)
 	,
 	/* 
@@ -500,7 +500,7 @@ begin
 		  from HVLog
 		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
 		  where convert(date, VisitStartTime) between @StartDate and @EndDate and 
-				VisitType = '0001'
+				VisitType = '00010'
 		)
 	,
 	/* 

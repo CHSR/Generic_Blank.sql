@@ -24,7 +24,6 @@ CREATE PROCEDURE [dbo].[spEditSupervision](@SupervisionPK int=NULL,
 @ParticipantEmergency bit=NULL,
 @PersonalGrowth bit=NULL,
 @ProfessionalGrowth bit=NULL,
-@ProgramFK int=NULL,
 @ReasonOther bit=NULL,
 @ReasonOtherSpecify varchar(500)=NULL,
 @RecordDocumentation bit=NULL,
@@ -63,7 +62,8 @@ CREATE PROCEDURE [dbo].[spEditSupervision](@SupervisionPK int=NULL,
 @Tools bit=NULL,
 @TrainingNeeds bit=NULL,
 @Weather bit=NULL,
-@WorkerFK int=NULL)
+@WorkerFK int=NULL,
+@ProgramFK int=NULL)
 AS
 UPDATE Supervision
 SET 
@@ -88,7 +88,6 @@ Outreach = @Outreach,
 ParticipantEmergency = @ParticipantEmergency, 
 PersonalGrowth = @PersonalGrowth, 
 ProfessionalGrowth = @ProfessionalGrowth, 
-ProgramFK = @ProgramFK, 
 ReasonOther = @ReasonOther, 
 ReasonOtherSpecify = @ReasonOtherSpecify, 
 RecordDocumentation = @RecordDocumentation, 
@@ -127,6 +126,7 @@ TechniquesApproaches = @TechniquesApproaches,
 Tools = @Tools, 
 TrainingNeeds = @TrainingNeeds, 
 Weather = @Weather, 
-WorkerFK = @WorkerFK
+WorkerFK = @WorkerFK, 
+ProgramFK = @ProgramFK
 WHERE SupervisionPK = @SupervisionPK
 GO

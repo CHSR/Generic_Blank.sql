@@ -2,7 +2,6 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
 -- =============================================
 -- Author:		<Devinder Singh Khalsa>
 -- Create date: <October 18, 2012>
@@ -158,7 +157,7 @@ WITH cteHVLogRegularVisits AS
 		SELECT HVCaseFK FROM HVLog h 
 		inner join dbo.SplitString(@programfk,',') on h.programfk = listitem
 		WHERE cast(VisitStartTime AS DATE) BETWEEN @Back2MonthsFromAnalysisPoint AND @LastDayofPreviousMonth
-		AND VisitType <> '0001' -- all regular visits
+		AND VisitType <> '00010' -- all regular visits
 		GROUP BY HVCaseFK
 	
 )
@@ -183,7 +182,7 @@ WITH cteHVLogAttempted AS
 (
 	SELECT HVCaseFK,max(VisitStartTime) VisitStartTime FROM HVLog h 
 	inner join dbo.SplitString(@programfk,',') on h.programfk = listitem
-	WHERE VisitType = '0001' -- all attempted visits
+	WHERE VisitType = '00010' -- all attempted visits
 	GROUP BY HVCaseFK 
 	
 )
@@ -192,7 +191,7 @@ WITH cteHVLogAttempted AS
 (
 	SELECT HVCaseFK,max(VisitStartTime) VisitStartTime FROM HVLog h 
 	inner join dbo.SplitString(@programfk,',') on h.programfk = listitem
-	WHERE VisitType <> '0001' -- all regular visits
+	WHERE VisitType <> '00010' -- all regular visits
 	AND VisitStartTime < @LastDayofPreviousMonth
 	GROUP BY HVCaseFK 
 	

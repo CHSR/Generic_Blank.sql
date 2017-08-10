@@ -125,7 +125,7 @@ END
 		h.TCNumber,
 		case when h.TCNumber > 1 then 'Yes' else 'No' end
 		as [MultipleBirth],
-		case when CaseProgress >= 10 then 'Completed on ' + (convert(varchar(100), isnull(h.TCDOB, h.EDC), 1)) + ' (' + (case when isnull(h.TCDOB, h.EDC) > h.IntakeDate then 'Pre-natal)' when isnull(h.TCDOB, h.EDC) <= h.IntakeDate then 'Post-natal)' else '' end) else 'Due by ' + convert(VARCHAR(20), dateadd(dd,30,IntakeDate), 101) end as  intakedd,	 
+		case when CaseProgress >= 10 and IntakePK is not null then 'Completed on ' + (convert(varchar(100), h.IntakeDate, 1)) + ' (' + (case when isnull(h.TCDOB, h.EDC) > h.IntakeDate then 'Pre-natal)' when isnull(h.TCDOB, h.EDC) <= h.IntakeDate then 'Post-natal)' else '' end) else 'Due by ' + convert(VARCHAR(20), dateadd(dd,30,h.IntakeDate), 101) end as  intakedd,	 
 		case when CaseProgress >= 11 then 'Complete' else 'Not Complete' end as  tcid_dd,	 
 		 
 		case
@@ -147,7 +147,8 @@ END
 		left join worker fsw on cp.CurrentFSWFK = fsw.workerpk
 		INNER JOIN workerprogram wp ON wp.workerfk = fsw.workerpk AND wp.ProgramFK = ListItem
 		left JOIN worker supervisor ON wp.supervisorfk = supervisor.workerpk
-		left join TCID T on T.HVCaseFK = h.HVCasePK 		
+		left join TCID T on T.HVCaseFK = h.HVCasePK 
+		left join dbo.Intake I on I.HVCaseFK = h.HVCasePK		
 		
 	-- when you go alive with this, uncomment the following lines and use them	... Khalsa
 	where

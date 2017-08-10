@@ -44,3 +44,5 @@ ALTER TABLE [dbo].[WorkerAssignment] WITH NOCHECK ADD CONSTRAINT [FK_WorkerAssig
 GO
 ALTER TABLE [dbo].[WorkerAssignment] WITH NOCHECK ADD CONSTRAINT [FK_WorkerAssignment_WorkerFK] FOREIGN KEY ([WorkerFK]) REFERENCES [dbo].[Worker] ([WorkerPK])
 GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'WorkerAssignment', 'COLUMN', N'WorkerAssignmentPK'
+GO

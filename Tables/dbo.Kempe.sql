@@ -172,3 +172,5 @@ ALTER TABLE [dbo].[Kempe] WITH NOCHECK ADD CONSTRAINT [FK_Kempe_PC1IssuesFK] FOR
 GO
 ALTER TABLE [dbo].[Kempe] WITH NOCHECK ADD CONSTRAINT [FK_Kempe_ProgramFK] FOREIGN KEY ([ProgramFK]) REFERENCES [dbo].[HVProgram] ([HVProgramPK])
 GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'Kempe', 'COLUMN', N'KempePK'
+GO

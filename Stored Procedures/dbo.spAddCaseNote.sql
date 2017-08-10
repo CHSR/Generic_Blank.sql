@@ -2,25 +2,25 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE PROCEDURE [dbo].[spAddCaseNote](@CaseNote varchar(max)=NULL,
+CREATE PROCEDURE [dbo].[spAddCaseNote](@CaseNoteContents varchar(max)=NULL,
 @CaseNoteCreator char(10)=NULL,
-@CaseNoteDate date=NULL,
 @HVCaseFK int=NULL,
-@ProgramFK int=NULL)
+@ProgramFK int=NULL,
+@CaseNoteDate date=NULL)
 AS
 INSERT INTO CaseNote(
-CaseNote,
+CaseNoteContents,
 CaseNoteCreator,
-CaseNoteDate,
 HVCaseFK,
-ProgramFK
+ProgramFK,
+CaseNoteDate
 )
 VALUES(
-@CaseNote,
+@CaseNoteContents,
 @CaseNoteCreator,
-@CaseNoteDate,
 @HVCaseFK,
-@ProgramFK
+@ProgramFK,
+@CaseNoteDate
 )
 
 SELECT SCOPE_IDENTITY() AS [SCOPE_IDENTITY]

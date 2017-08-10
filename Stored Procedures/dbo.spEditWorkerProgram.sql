@@ -3,7 +3,6 @@ GO
 SET ANSI_NULLS ON
 GO
 CREATE PROCEDURE [dbo].[spEditWorkerProgram](@WorkerProgramPK int=NULL,
-@BackgroundCheckDate date=NULL,
 @CommunityOutreach bit=NULL,
 @DirectParticipantServices bit=NULL,
 @FatherAdvocate bit=NULL,
@@ -28,6 +27,10 @@ CREATE PROCEDURE [dbo].[spEditWorkerProgram](@WorkerProgramPK int=NULL,
 @SupervisorFK int=NULL,
 @SupervisorStartDate datetime=NULL,
 @TerminationDate datetime=NULL,
+@WorkerFK int=NULL,
+@WorkerNotes varchar(500)=NULL,
+@WorkerProgramEditor char(10)=NULL,
+@WorkPhone char(12)=NULL,
 @TerminationReasonRetired bit=NULL,
 @TerminationReasonForbetterJob bit=NULL,
 @TerminationReasonMoved bit=NULL,
@@ -43,14 +46,10 @@ CREATE PROCEDURE [dbo].[spEditWorkerProgram](@WorkerProgramPK int=NULL,
 @TerminationReasonBackToSchool bit=NULL,
 @TerminationReasonOther bit=NULL,
 @TerminationReasonOtherSpecify varchar(50)=NULL,
-@WorkerFK int=NULL,
-@WorkerNotes varchar(500)=NULL,
-@WorkerProgramEditor char(10)=NULL,
-@WorkPhone char(12)=NULL)
+@BackgroundCheckDate date=NULL)
 AS
 UPDATE WorkerProgram
 SET 
-BackgroundCheckDate = @BackgroundCheckDate, 
 CommunityOutreach = @CommunityOutreach, 
 DirectParticipantServices = @DirectParticipantServices, 
 FatherAdvocate = @FatherAdvocate, 
@@ -75,6 +74,10 @@ SupervisorEndDate = @SupervisorEndDate,
 SupervisorFK = @SupervisorFK, 
 SupervisorStartDate = @SupervisorStartDate, 
 TerminationDate = @TerminationDate, 
+WorkerFK = @WorkerFK, 
+WorkerNotes = @WorkerNotes, 
+WorkerProgramEditor = @WorkerProgramEditor, 
+WorkPhone = @WorkPhone, 
 TerminationReasonRetired = @TerminationReasonRetired, 
 TerminationReasonForbetterJob = @TerminationReasonForbetterJob, 
 TerminationReasonMoved = @TerminationReasonMoved, 
@@ -90,9 +93,6 @@ TerminationReasonLossFunding = @TerminationReasonLossFunding,
 TerminationReasonBackToSchool = @TerminationReasonBackToSchool, 
 TerminationReasonOther = @TerminationReasonOther, 
 TerminationReasonOtherSpecify = @TerminationReasonOtherSpecify, 
-WorkerFK = @WorkerFK, 
-WorkerNotes = @WorkerNotes, 
-WorkerProgramEditor = @WorkerProgramEditor, 
-WorkPhone = @WorkPhone
+BackgroundCheckDate = @BackgroundCheckDate
 WHERE WorkerProgramPK = @WorkerProgramPK
 GO

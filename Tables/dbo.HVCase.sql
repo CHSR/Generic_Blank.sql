@@ -211,6 +211,8 @@ CREATE NONCLUSTERED INDEX [IX_HVCase_PC1FK] ON [dbo].[HVCase] ([PC1FK]) ON [PRIM
 GO
 CREATE NONCLUSTERED INDEX [IX_FK_HVCase_PC2FK] ON [dbo].[HVCase] ([PC2FK]) ON [PRIMARY]
 GO
+CREATE NONCLUSTERED INDEX [ixHVCaseScreenDate] ON [dbo].[HVCase] ([ScreenDate]) INCLUDE ([CaseProgress], [EDC], [HVCasePK], [IntakeDate], [KempeDate], [PC1FK], [TCDOB]) ON [PRIMARY]
+GO
 CREATE STATISTICS [_dta_stat_165575628_2_33] ON [dbo].[HVCase] ([CaseProgress], [TCDOB])
 GO
 CREATE STATISTICS [_dta_stat_165575628_1_2_24] ON [dbo].[HVCase] ([HVCasePK], [CaseProgress], [PC1FK])

@@ -2,7 +2,6 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
 -- =============================================
 -- Author:		<Devinder Singh Khalsa>
 -- Create date: <January 4th, 2013>
@@ -1093,7 +1092,7 @@ as
 								and (h.DischargeDate is null
 									 or h.DischargeDate >= [QuarterStartDate]
 									) -- not discharged or discharged after the quarter start date	
-								and HVLog.VisitType <> '0001'
+								and HVLog.VisitType <> '00010'
 					 ) ,
 				cteAllFamilies8aVisits
 				  as ( -- "8    a. Average Visits per Family"

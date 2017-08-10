@@ -159,7 +159,7 @@ SET NOCOUNT ON;
 			inner join HVCase c on c.HVCasePK = vl.HVCaseFK
 			inner join dbo.SplitString(@ProgramFK, ',') ss on ss.ListItem = vl.ProgramFK
 			inner join cteCohort co on co.HVCasePK = c.HVCasePK
-			where VisitType <> '0001' and 
+			where VisitType <> '00010' and 
 					(IntakeDate is not null and IntakeDate between @StartDate and @EndDate)
 							 -- and vl.ProgramFK = @ProgramFK
 			group by HVCaseFK

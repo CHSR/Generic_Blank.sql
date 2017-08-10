@@ -5,31 +5,31 @@ GO
 CREATE PROCEDURE [dbo].[spAddCaseFilter](@CaseFilterNameFK int=NULL,
 @CaseFilterCreator varchar(10)=NULL,
 @CaseFilterNameChoice bit=NULL,
-@CaseFilterNameDate date=NULL,
 @CaseFilterNameOptionFK int=NULL,
 @CaseFilterValue varchar(50)=NULL,
 @HVCaseFK int=NULL,
-@ProgramFK int=NULL)
+@ProgramFK int=NULL,
+@CaseFilterNameDate date=NULL)
 AS
 INSERT INTO CaseFilter(
 CaseFilterNameFK,
 CaseFilterCreator,
 CaseFilterNameChoice,
-CaseFilterNameDate,
 CaseFilterNameOptionFK,
 CaseFilterValue,
 HVCaseFK,
-ProgramFK
+ProgramFK,
+CaseFilterNameDate
 )
 VALUES(
 @CaseFilterNameFK,
 @CaseFilterCreator,
 @CaseFilterNameChoice,
-@CaseFilterNameDate,
 @CaseFilterNameOptionFK,
 @CaseFilterValue,
 @HVCaseFK,
-@ProgramFK
+@ProgramFK,
+@CaseFilterNameDate
 )
 
 SELECT SCOPE_IDENTITY() AS [SCOPE_IDENTITY]

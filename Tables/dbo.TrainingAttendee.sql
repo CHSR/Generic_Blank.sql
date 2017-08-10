@@ -36,3 +36,5 @@ ALTER TABLE [dbo].[TrainingAttendee] ADD CONSTRAINT [FK_TrainingAttendee_Trainin
 GO
 ALTER TABLE [dbo].[TrainingAttendee] ADD CONSTRAINT [FK_TrainingAttendee_WorkerFK] FOREIGN KEY ([WorkerFK]) REFERENCES [dbo].[Worker] ([WorkerPK])
 GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'TrainingAttendee', 'COLUMN', N'TrainingAttendeePK'
+GO

@@ -118,13 +118,13 @@ set @programfk = replace(@programfk,'"','')
 		 ,str(sum(case when isnull(a.TCDOB,a.EDC) < cast(c.VisitStartTime as date) then 1 else 0 end)*100.0/@y,10,0)+'%' [Postnatal]
 		 
 		 -- type of visit
-		 ,str(sum(case when c.VisitType = '1000' then 1 else 0 end)*100.0/@x,10,0)+'%' [InPC1HomeOnly]
-		 ,str(sum(case when c.VisitType = '0100' then 1 else 0 end)*100.0/@x,10,0)+'%' [InFatherFigureOBPHomeOnly]
-		 ,str(sum(case when c.VisitType = '1010' then 1 else 0 end)*100.0/@x,10,0)+'%' [InOutOfPC1Home]
-		 ,str(sum(case when c.VisitType = '0110' then 1 else 0 end)*100.0/@x,10,0)+'%' [InOutOfFatherFigureOBPHome]
-		 ,str(sum(case when c.VisitType = '1100' then 1 else 0 end)*100.0/@x,10,0)+'%' [InBothPC1FatherFigureOBPHome]
-		 ,str(sum(case when c.VisitType = '0010' then 1 else 0 end)*100.0/@x,10,0)+'%' [OutOfBothPC1FatherFigureOBPHome]
-		 ,str(sum(case when c.VisitType = '1110' then 1 else 0 end)*100.0/@x,10,0)+'%' [InBothPC1FatherFigureOBPHomeAndOutBoth]
+		 ,str(sum(case when c.VisitType = '10000' then 1 else 0 end)*100.0/@x,10,0)+'%' [InPC1HomeOnly]
+		 ,str(sum(case when c.VisitType = '01000' then 1 else 0 end)*100.0/@x,10,0)+'%' [InFatherFigureOBPHomeOnly]
+		 ,str(sum(case when c.VisitType = '10100' then 1 else 0 end)*100.0/@x,10,0)+'%' [InOutOfPC1Home]
+		 ,str(sum(case when c.VisitType = '01100' then 1 else 0 end)*100.0/@x,10,0)+'%' [InOutOfFatherFigureOBPHome]
+		 ,str(sum(case when c.VisitType = '11000' then 1 else 0 end)*100.0/@x,10,0)+'%' [InBothPC1FatherFigureOBPHome]
+		 ,str(sum(case when c.VisitType = '00100' then 1 else 0 end)*100.0/@x,10,0)+'%' [OutOfBothPC1FatherFigureOBPHome]
+		 ,str(sum(case when c.VisitType = '11100' then 1 else 0 end)*100.0/@x,10,0)+'%' [InBothPC1FatherFigureOBPHomeAndOutBoth]
 		 -- new type of visit
 		 
 		 
@@ -264,13 +264,13 @@ set @programfk = replace(@programfk,'"','')
 		 ,str(sum(case when isnull(a.TCDOB,a.EDC) < cast(c.VisitStartTime as date) then 1 else 0 end)*100.0/@yX,10,0)+'%' [PostnatalX]
 
          -- type of visit
-		 ,str(sum(case when c.VisitType = '1000' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InPC1HomeOnlyX]
-		 ,str(sum(case when c.VisitType = '0100' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InFatherFigureOBPHomeOnlyX]
-		 ,str(sum(case when c.VisitType = '1010' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InOutOfPC1HomeX]
-		 ,str(sum(case when c.VisitType = '0110' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InOutOfFatherFigureOBPHomeX]
-		 ,str(sum(case when c.VisitType = '1100' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InBothPC1FatherFigureOBPHomeX]
-		 ,str(sum(case when c.VisitType = '0010' then 1 else 0 end)*100.0/@xX,10,0)+'%' [OutOfBothPC1FatherFigureOBPHomeX]
-		 ,str(sum(case when c.VisitType = '1110' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InBothPC1FatherFigureOBPHomeAndOutBothX]
+		 ,str(sum(case when c.VisitType = '10000' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InPC1HomeOnlyX]
+		 ,str(sum(case when c.VisitType = '01000' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InFatherFigureOBPHomeOnlyX]
+		 ,str(sum(case when c.VisitType = '10100' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InOutOfPC1HomeX]
+		 ,str(sum(case when c.VisitType = '01100' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InOutOfFatherFigureOBPHomeX]
+		 ,str(sum(case when c.VisitType = '11000' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InBothPC1FatherFigureOBPHomeX]
+		 ,str(sum(case when c.VisitType = '00100' then 1 else 0 end)*100.0/@xX,10,0)+'%' [OutOfBothPC1FatherFigureOBPHomeX]
+		 ,str(sum(case when c.VisitType = '11100' then 1 else 0 end)*100.0/@xX,10,0)+'%' [InBothPC1FatherFigureOBPHomeAndOutBothX]
 		 -- new type of visit
 
 

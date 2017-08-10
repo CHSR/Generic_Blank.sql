@@ -2,7 +2,20 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
+/*
+exec improving-rspScreenReferralSourceDemographicsAndOutcomeAnalysis
+declare @programfk varchar(max)    = null
+declare @sdate     datetime
+declare @edate     datetime
+declare @listReferralSourcePK int = null -- pk of Referral Source Agency
+set nocount on
+
+set @programfk = '1'
+set @sdate = '2017-01-01'
+set @edate  = '2017-03-31'
+*/
 -- =============================================
+-- alter procedure rspScreenReferralSourceDemographicsAndOutcomeAnalysis
 -- Author:		Devinder Singh Khalsa
 -- Create date: Oct. 3rd, 2013
 -- Description:	Screen Referral Source Demographics And Outcome Analysis
@@ -20,8 +33,6 @@ ON [dbo].[HVCase] ([ScreenDate])
 INCLUDE ([HVCasePK],[CaseProgress],[EDC],[IntakeDate],[KempeDate],[PC1FK],[TCDOB])
 GO
 */
-
-
 CREATE procedure [dbo].[rspScreenReferralSourceDemographicsAndOutcomeAnalysis]
 (
     @programfk varchar(max)    = null,
@@ -31,14 +42,11 @@ CREATE procedure [dbo].[rspScreenReferralSourceDemographicsAndOutcomeAnalysis]
 )
 as
 
-
-set nocount on
-
-IF 1=0 BEGIN
+if 1=0 BEGIN
     SET FMTONLY OFF
 END
---set statistics time on 
---set statistics IO on 
+set statistics time on 
+set statistics IO on 
 
 
 	if @programfk is null

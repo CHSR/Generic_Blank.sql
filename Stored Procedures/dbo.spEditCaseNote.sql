@@ -3,18 +3,18 @@ GO
 SET ANSI_NULLS ON
 GO
 CREATE PROCEDURE [dbo].[spEditCaseNote](@CaseNotePK int=NULL,
-@CaseNote varchar(max)=NULL,
-@CaseNoteDate date=NULL,
+@CaseNoteContents varchar(max)=NULL,
 @CaseNoteEditor char(10)=NULL,
 @HVCaseFK int=NULL,
-@ProgramFK int=NULL)
+@ProgramFK int=NULL,
+@CaseNoteDate date=NULL)
 AS
 UPDATE CaseNote
 SET 
-CaseNote = @CaseNote, 
-CaseNoteDate = @CaseNoteDate, 
+CaseNoteContents = @CaseNoteContents, 
 CaseNoteEditor = @CaseNoteEditor, 
 HVCaseFK = @HVCaseFK, 
-ProgramFK = @ProgramFK
+ProgramFK = @ProgramFK, 
+CaseNoteDate = @CaseNoteDate
 WHERE CaseNotePK = @CaseNotePK
 GO

@@ -164,10 +164,10 @@ GO
 --				Supervision row has been edited
 -- =============================================
 CREATE trigger [dbo].[TR_SupervisionEditDate] ON [dbo].[Supervision]
-For Update 
-AS
-Update Supervision Set Supervision.SupervisionEditDate= getdate()
-From [Supervision] INNER JOIN Inserted ON [Supervision].[SupervisionPK]= Inserted.[SupervisionPK]
+for update
+as
+update Supervision set Supervision.SupervisionEditDate = getdate()
+from [Supervision] inner join Inserted on [Supervision].[SupervisionPK]= Inserted.[SupervisionPK]
 GO
 ALTER TABLE [dbo].[Supervision] ADD CONSTRAINT [PK__Supervis__3AC5E6F97D0E9093] PRIMARY KEY CLUSTERED  ([SupervisionPK]) ON [PRIMARY]
 GO
@@ -180,4 +180,6 @@ GO
 ALTER TABLE [dbo].[Supervision] WITH NOCHECK ADD CONSTRAINT [FK_Supervision_SupervisorFK] FOREIGN KEY ([SupervisorFK]) REFERENCES [dbo].[Worker] ([WorkerPK])
 GO
 ALTER TABLE [dbo].[Supervision] WITH NOCHECK ADD CONSTRAINT [FK_Supervision_WorkerFK] FOREIGN KEY ([WorkerFK]) REFERENCES [dbo].[Worker] ([WorkerPK])
+GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'Supervision', 'COLUMN', N'SupervisionPK'
 GO

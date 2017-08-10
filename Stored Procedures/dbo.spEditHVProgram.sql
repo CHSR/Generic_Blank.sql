@@ -24,7 +24,6 @@ CREATE PROCEDURE [dbo].[spEditHVProgram](@HVProgramPK int=NULL,
 @LeadAgencyStreet char(40)=NULL,
 @LeadAgencyZip char(10)=NULL,
 @ModemNumber char(12)=NULL,
-@ProgramCapacity int=NULL,
 @ProgramCity char(20)=NULL,
 @ProgramCode char(3)=NULL,
 @ProgramFaxNumber char(12)=NULL,
@@ -33,8 +32,9 @@ CREATE PROCEDURE [dbo].[spEditHVProgram](@HVProgramPK int=NULL,
 @ProgramPhone char(12)=NULL,
 @ProgramStreet char(40)=NULL,
 @ProgramZip char(10)=NULL,
-@RegionFK int=NULL,
-@TargetZip nvarchar(500)=NULL)
+@TargetZip nvarchar(500)=NULL,
+@ProgramCapacity int=NULL,
+@RegionFK int=NULL)
 AS
 UPDATE HVProgram
 SET 
@@ -59,7 +59,6 @@ LeadAgencyName = @LeadAgencyName,
 LeadAgencyStreet = @LeadAgencyStreet, 
 LeadAgencyZip = @LeadAgencyZip, 
 ModemNumber = @ModemNumber, 
-ProgramCapacity = @ProgramCapacity, 
 ProgramCity = @ProgramCity, 
 ProgramCode = @ProgramCode, 
 ProgramFaxNumber = @ProgramFaxNumber, 
@@ -68,7 +67,8 @@ ProgramName = @ProgramName,
 ProgramPhone = @ProgramPhone, 
 ProgramStreet = @ProgramStreet, 
 ProgramZip = @ProgramZip, 
-RegionFK = @RegionFK, 
-TargetZip = @TargetZip
+TargetZip = @TargetZip, 
+ProgramCapacity = @ProgramCapacity, 
+RegionFK = @RegionFK
 WHERE HVProgramPK = @HVProgramPK
 GO

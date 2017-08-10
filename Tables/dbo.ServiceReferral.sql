@@ -120,3 +120,5 @@ ALTER TABLE [dbo].[ServiceReferral] WITH NOCHECK ADD CONSTRAINT [FK_ServiceRefer
 GO
 ALTER TABLE [dbo].[ServiceReferral] WITH NOCHECK ADD CONSTRAINT [FK_ServiceReferral_ProvidingAgencyFK] FOREIGN KEY ([ProvidingAgencyFK]) REFERENCES [dbo].[listServiceReferralAgency] ([listServiceReferralAgencyPK])
 GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'ServiceReferral', 'COLUMN', N'ServiceReferralPK'
+GO

@@ -116,3 +116,5 @@ ALTER TABLE [dbo].[Intake] WITH NOCHECK ADD CONSTRAINT [FK_Intake_HVCaseFK] FORE
 GO
 ALTER TABLE [dbo].[Intake] WITH NOCHECK ADD CONSTRAINT [FK_Intake_ProgramFK] FOREIGN KEY ([ProgramFK]) REFERENCES [dbo].[HVProgram] ([HVProgramPK])
 GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'Intake', 'COLUMN', N'IntakePK'
+GO

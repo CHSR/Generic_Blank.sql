@@ -9,7 +9,7 @@ AS
 RETURN 
 (
 
-	SELECT * FROM caseprogram cp
+	SELECT * FROM caseprogram cp with (nolock)
 	WHERE cp.ProgramFK = ISNULL(@ProgramFK, cp.ProgramFK)
 	
 

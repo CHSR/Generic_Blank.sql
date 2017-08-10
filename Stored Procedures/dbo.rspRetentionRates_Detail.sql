@@ -305,7 +305,7 @@ BEGIN
 		(select HVCaseFK
 				  , max(vl.VisitStartTime) as LastHomeVisit
 				  , count(vl.VisitStartTime) as CountOfHomeVisits
-			from HVLog vl
+			from HVLog  vl WITH (NOLOCK)
 			inner join hvcase c ON c.HVCasePK=vl.HVCaseFK 
 			inner join dbo.SplitString(@ProgramFK, ',') ss on ss.ListItem = vl.ProgramFK
 			where VisitType <> '0001' and 

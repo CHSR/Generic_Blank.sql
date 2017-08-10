@@ -89,11 +89,18 @@ begin
 	---
 	if (@positiveClause is null or @positiveClause = '') and (@negativeClause is null or @negativeClause = '') 
 		begin
+			with cteUniqueCases as 
+				(select max(CaseProgramPK) as CaseProgramPK
+					from CaseProgram cp
+					inner join HVCase hc on hc.HVCasePK = cp.HVCaseFK
+					inner join SplitString(@ProgramFKs, ',') ss on ss.ListItem = cp.ProgramFK
+					group by HVCaseFK
+				)
 			insert into @tblCases
-				select HVCasePK 
-				from CaseProgram cp
-				inner join HVCase h on h.HVCasePK = cp.HVCaseFK
-				inner join dbo.SplitString(@ProgramFKs,',') on cp.programfk = listitem
+				select HVCaseFK as HVCasePK 
+				from cteUniqueCases uc
+				inner join CaseProgram cp on cp.CaseProgramPK = uc.CaseProgramPK
+				--inner join HVCase h on h.HVCasePK = cp.HVCaseFK				
 		end
 	else
 		begin

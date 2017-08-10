@@ -23,7 +23,6 @@ CREATE PROCEDURE [dbo].[spAddSupervision](@ActivitiesOther bit=NULL,
 @ParticipantEmergency bit=NULL,
 @PersonalGrowth bit=NULL,
 @ProfessionalGrowth bit=NULL,
-@ProgramFK int=NULL,
 @ReasonOther bit=NULL,
 @ReasonOtherSpecify varchar(500)=NULL,
 @RecordDocumentation bit=NULL,
@@ -62,7 +61,8 @@ CREATE PROCEDURE [dbo].[spAddSupervision](@ActivitiesOther bit=NULL,
 @Tools bit=NULL,
 @TrainingNeeds bit=NULL,
 @Weather bit=NULL,
-@WorkerFK int=NULL)
+@WorkerFK int=NULL,
+@ProgramFK int=NULL)
 AS
 INSERT INTO Supervision(
 ActivitiesOther,
@@ -86,7 +86,6 @@ Outreach,
 ParticipantEmergency,
 PersonalGrowth,
 ProfessionalGrowth,
-ProgramFK,
 ReasonOther,
 ReasonOtherSpecify,
 RecordDocumentation,
@@ -125,7 +124,8 @@ TechniquesApproaches,
 Tools,
 TrainingNeeds,
 Weather,
-WorkerFK
+WorkerFK,
+ProgramFK
 )
 VALUES(
 @ActivitiesOther,
@@ -149,7 +149,6 @@ VALUES(
 @ParticipantEmergency,
 @PersonalGrowth,
 @ProfessionalGrowth,
-@ProgramFK,
 @ReasonOther,
 @ReasonOtherSpecify,
 @RecordDocumentation,
@@ -188,7 +187,8 @@ VALUES(
 @Tools,
 @TrainingNeeds,
 @Weather,
-@WorkerFK
+@WorkerFK,
+@ProgramFK
 )
 
 SELECT SCOPE_IDENTITY() AS [SCOPE_IDENTITY]

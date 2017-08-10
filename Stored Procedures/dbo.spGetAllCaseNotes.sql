@@ -19,8 +19,8 @@ as
 
     -- Insert statements for procedure here
 		select	CaseNotePK
-			  , CaseNote
-			  , rtrim(left(CaseNote, 55)) + '...' as CaseNoteExtract
+			  , CaseNoteContents
+			  , rtrim(left(CaseNoteContents, 55)) + '...' as CaseNoteExtract
 			  , CaseNoteCreateDate
 			  , CaseNoteCreator
 			  , CaseNoteEditDate

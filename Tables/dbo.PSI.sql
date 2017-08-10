@@ -159,3 +159,5 @@ ALTER TABLE [dbo].[PSI] WITH NOCHECK ADD CONSTRAINT [FK_PSI_HVCaseFK] FOREIGN KE
 GO
 ALTER TABLE [dbo].[PSI] WITH NOCHECK ADD CONSTRAINT [FK_PSI_ProgramFK] FOREIGN KEY ([ProgramFK]) REFERENCES [dbo].[HVProgram] ([HVProgramPK])
 GO
+EXEC sp_addextendedproperty N'MS_Description', N'Do not accept SVN changes', 'SCHEMA', N'dbo', 'TABLE', N'PSI', 'COLUMN', N'PSIPK'
+GO

@@ -348,7 +348,7 @@ SET NOCOUNT ON;
 		(select HVCaseFK
 				  , max(vl.VisitStartTime) as LastHomeVisit
 				  , count(vl.VisitStartTime) as CountOfHomeVisits
-			from HVLog vl
+			from HVLog  vl WITH (NOLOCK)
 			inner join HVCase c on c.HVCasePK = vl.HVCaseFK
 			inner join dbo.SplitString(@ProgramFK, ',') ss on ss.ListItem = vl.ProgramFK
 			inner join cteCohort co on co.HVCasePK = c.HVCasePK
