@@ -1,6 +1,6 @@
 CREATE TABLE [dbo].[ASQSE]
 (
-[ASQSEPK] [money] NOT NULL,
+[ASQSEPK] [int] NOT NULL IDENTITY(1, 1),
 [ASQSECreateDate] [datetime] NOT NULL CONSTRAINT [DF_ASQSE_ASQSECreateDate] DEFAULT (getdate()),
 [ASQSECreator] [char] (10) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 [ASQSEDateCompleted] [datetime] NOT NULL,
