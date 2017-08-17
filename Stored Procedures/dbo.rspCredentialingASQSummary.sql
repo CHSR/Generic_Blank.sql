@@ -48,6 +48,21 @@ AS
 	declare @n int = 0
 	select @n = case when @UnderCutoffOnly = 'Y' then 1 else 0 end
 
+	if object_id('tempdb..#cteAll') is not null drop table #cteAll
+
+	create table #cteAll (
+		   supervisor varchar(100)
+		 , worker varchar(100)
+		 , PC1ID char(13)
+		 , TCName varchar(450)
+		 , TCDOB varchar(12)
+		 , GestationalAge int
+		 , TCAge varchar(150)
+		 , DateCompleted varchar(12)
+		 , InWindow varchar(50)
+		 , [TCAgeCode] char(2)
+		 , ASQTCReceiving int
+	)
 
 ;with cteMain
 	as (
@@ -138,13 +153,12 @@ cteNone
 			 AND (CASE WHEN @UnderCutoffOnly = 'Y' THEN 1 ELSE 0 END = 0)
 )
 
-,cteAll	as (
+insert into #cteAll	
 	  SELECT DISTINCT * FROM cteMain
 	  UNION all
 	  SELECT * FROM cteNone 
-)	
 	
-, cteAdjAge AS (
+; with cteAdjAge AS (
 	SELECT * 
 	
          ,CASE WHEN (CASE WHEN dateadd(year, datediff (year, a.TCDOB, getdate()), a.TCDOB) > getdate()
@@ -153,7 +167,7 @@ cteNone
           END) < 2 AND a.GestationalAge <= 40 
           THEN convert(DATETIME, a.TCDOB, 101) + (40 - a.GestationalAge) * 7
           ELSE convert(DATETIME, a.TCDOB, 101) END AdjTCDOB
-	FROM cteAll AS a
+	FROM #cteAll AS a
 )
 
 , cteFinal AS (
@@ -305,4 +319,6 @@ FROM cte2
 WHERE (@WorkerFK IS NOT NULL AND worker <> 'Program Total') OR (@WorkerFK IS NULL)
 
 ORDER BY orderkey, worker, age
+
+drop table #cteAll
 GO

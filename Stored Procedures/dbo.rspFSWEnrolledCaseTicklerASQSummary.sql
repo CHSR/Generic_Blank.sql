@@ -8,7 +8,9 @@ GO
 -- Description:	<gets you data for Performance Target report - HD7. Age Appropriate Developmental level >
 -- rspPerformanceTargetReportSummary 5 ,'10/01/2012' ,'12/31/2012'
 -- exec rspFSWEnrolledCaseTicklerLastASQ 5 ,'01/01/2012' ,'03/31/2012'
-
+-- Edited by Benjamin Simmons
+-- Edit Date: 08/17/17
+-- Edit Reason: Optimized the stored procedure by converting cohort CTE into a temp table
 -- =============================================
 CREATE procedure [dbo].[rspFSWEnrolledCaseTicklerASQSummary]
 (
@@ -19,6 +21,26 @@ CREATE procedure [dbo].[rspFSWEnrolledCaseTicklerASQSummary]
 
 as
 begin
+
+	if object_id('tempdb..#cteCohort') is not null drop table #cteCohort
+
+	create table #cteCohort(
+		HVCaseFK int
+		, PC1ID varchar(13)
+		, OldID varchar(23)
+		, PC1FullName varchar(max)
+		, CurrentWorkerFK int
+		, CurrentWorkerFullName varchar(max)
+		, CurrentLevelName varchar(50)
+		, ProgramFK int
+		, TCIDPK int
+		, TCDOB datetime
+		, DischargeDate datetime
+		, tcAgeDays int
+		, tcASQAgeDays int
+		, lastdate datetime
+		, GestationalAge int
+	)
 
 	;
 	with cteTotalCases
@@ -54,10 +76,7 @@ begin
 				inner join CaseProgram cp on cp.CaseProgramPK = ptc.CaseProgramPK
 				-- h.hvcasePK = cp.HVCaseFK and cp.ProgramFK = ptc.ProgramFK -- AND cp.DischargeDate IS NULL
 	)
-	,
-	cteCohort
-	as
-	(
+	insert into #cteCohort
 		select ctc.HVCaseFK
 			  , PC1ID
 			  , OldID
@@ -87,10 +106,9 @@ begin
 					 else
 						 dateadd(dd,.33*365.25,(((40-gestationalage)*7)+ctc.TCDOB))
 				 end <= lastdate -- 4 months 
-	)
 	-- SELECT * FROM cteCohort
-	,
-	cteASQDueInterval -- age appropriate ASQ Intervals that are expected to be there
+	;
+	with cteASQDueInterval -- age appropriate ASQ Intervals that are expected to be there
 	as
 	(
 		select
@@ -98,7 +116,7 @@ begin
 			 ,c.TCIDPK
 			 ,max(cd.Interval) as Interval -- given child age, this is the interval that one expect to find ASQ record in the DB
 
-			from cteCohort c
+			from #cteCohort c
 				inner join codeDueByDates cd on scheduledevent = 'ASQ' and tcASQAgeDays >= DueBy
 			group by HVCaseFK
 					,c.TCIDPK 
@@ -115,7 +133,7 @@ begin
 			 ,c.TCIDPK
 			 ,max(cd.Interval) as Interval -- given child age, this is the interval that one expect to find ASQ record in the DB
 
-			from cteCohort c
+			from #cteCohort c
 				inner join cteASQDueInterval i on i.HVCaseFK = c.HVCaseFK and i.TCIDPK = c.TCIDPK
 				inner join codeDueByDates cd on scheduledevent = 'ASQ' and tcASQAgeDays >= DueBy
 			where cd.Interval < i.Interval
@@ -132,7 +150,7 @@ begin
 			 ,c.TCIDPK
 			 ,max(cd.Interval) as Interval -- given child age, this is the interval that one expect to find ASQ record in the DB
 
-			from cteCohort c
+			from #cteCohort c
 				inner join cteASQDueIntervalOneBefore i on i.HVCaseFK = c.HVCaseFK and i.TCIDPK = c.TCIDPK
 				inner join codeDueByDates cd on scheduledevent = 'ASQ' and tcASQAgeDays >= DueBy
 			where cd.Interval < i.Interval
@@ -151,7 +169,7 @@ begin
           , c.TCIDPK   
           , max(A.TCAge) as Interval -- given child age, this is the interval that one expect to find ASQ record in the DB
        
-       from cteCohort c
+       from #cteCohort c
        inner join codeDueByDates cd on scheduledevent = 'ASQ' and tcASQAgeDays >= DueBy 
        inner join ASQ A on c.HVCaseFK = A.HVCaseFK and A.TCIDFK = c.TCIDPK  
        group by c.HVCaseFK,c.TCIDPK 
@@ -245,7 +263,7 @@ begin
 		  	   , capp4.AppCodeText as FormText4
 		  	   , a4.ASQTCReceiving as a4TCReceiving
 		  	   , a4.DateCompleted as a4DateCompleted
-			from cteCohort c
+			from #cteCohort c
 				left outer join cteASQDueInterval casi on casi.hvcasefk = c.hvcasefk and casi.tcidpk = c.tcidpk
 				left outer join ASQ a1 on a1.hvcasefk = c.hvcasefk and casi.tcidpk = a1.tcidfk and a1.TCAge = casi.Interval
 				left outer join scoreASQ score1 on score1.TCAge = casi.Interval and score1.ASQVersion = a1.VersionNumber 
@@ -525,6 +543,8 @@ begin
 	select * from cteMain
 	--where pc1id = 'AC87140056486'
 	--order by PC1ID
+
+	drop table #cteCohort
 			
 end
 GO

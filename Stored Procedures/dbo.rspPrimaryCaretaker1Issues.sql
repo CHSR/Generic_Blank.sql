@@ -35,41 +35,52 @@ set @programfk = replace(@programfk,'"','')
 	set @SiteFK = case when dbo.IsNullOrEmpty(@SiteFK) = 1 then 0 else @SiteFK end
 	set @casefilterspositive = case when @casefilterspositive = '' then null else @casefilterspositive end;
 
-	with cteCohort as (select pc1i.HVCaseFK
-								, PC1IssuesPK
-								, PC1IssuesDate
-								, pc1i.ProgramFK
-								, Interval
-						from dbo.PC1Issues pc1i
-							join CaseProgram cp on cp.HVCaseFK = pc1i.HVCaseFK
-							INNER JOIN dbo.SplitString(@programfk,',') on pc1i.programfk = listitem
-							inner join HVCase h on h.HVCasePK = cp.HVCaseFK
-							inner join WorkerProgram wp on wp.WorkerFK = cp.CurrentFSWFK
-							inner join dbo.udfCaseFilters(@casefilterspositive,'', @programfk) cf on cf.HVCaseFK = cp.HVCaseFK
-						where -- pc1i.PC1IssuesDate between @StartDt and @EndDt
-							 --pc1i.ProgramFK = @programfk and 
-							 (cp.DischargeDate is null or cp.DischargeDate >= @StartDt)
-							 and IntakeDate is not null 
-							 and IntakeDate <= @EndDt
-							 and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
-						-- group by pc1i.HVCaseFK
-						), 
-	cteTotalCount as (select count(distinct HVCaseFK) as TotalCount
-			from cteCohort
+	if object_id('tempdb..#cteCohort') is not null drop table #cteCohort
+	create table #cteCohort (
+		HVCaseFK int
+		, PC1IssuesPK int
+		, PC1IssuesDate datetime
+		, ProgramFK int
+		, Interval char(2)
+	)
+	
+	insert into #cteCohort
+	select pc1i.HVCaseFK
+			, PC1IssuesPK
+			, PC1IssuesDate
+			, pc1i.ProgramFK
+			, Interval
+	from dbo.PC1Issues pc1i
+		join CaseProgram cp on cp.HVCaseFK = pc1i.HVCaseFK
+		INNER JOIN dbo.SplitString(@programfk,',') on pc1i.programfk = listitem
+		inner join HVCase h on h.HVCasePK = cp.HVCaseFK
+		inner join WorkerProgram wp on wp.WorkerFK = cp.CurrentFSWFK
+		inner join dbo.udfCaseFilters(@casefilterspositive,'', @programfk) cf on cf.HVCaseFK = cp.HVCaseFK
+	where -- pc1i.PC1IssuesDate between @StartDt and @EndDt
+		--pc1i.ProgramFK = @programfk and 
+		(cp.DischargeDate is null or cp.DischargeDate >= @StartDt)
+		and IntakeDate is not null 
+		and IntakeDate <= @EndDt
+		and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
+	-- group by pc1i.HVCaseFK
+						
+
+; with cteTotalCount as (select count(distinct HVCaseFK) as TotalCount
+			from #cteCohort
 		 ),
 	cteKempeCount as (select count(distinct HVCaseFK) as KempeCount
-			from cteCohort
+			from #cteCohort
 			where rtrim(Interval) = '1'
 		 ),
 
 	cteLastIssues as (select HVCaseFK
 						,max(PC1IssuesPK) [PC1IssuesPK]
-						from cteCohort coh
+						from #cteCohort coh
 						group by HVCaseFK
 						),
 	cteLastKempeIssues as (select HVCaseFK
 			  ,max(PC1IssuesPK) [PC1IssuesPK]
-			from cteCohort coh
+			from #cteCohort coh
 			where rtrim(Interval) = '1'
 			group by HVCaseFK
 		   ),
@@ -169,6 +180,8 @@ set @programfk = replace(@programfk,'"','')
 		  ,*
 		from sub2
 			join sub1 on 1 = 1
+
+	drop table #cteCohort
 
 --------------------------------------------------------------------------------------------------------------		
 	--select @x = count(distinct pc1i.HVCaseFK)

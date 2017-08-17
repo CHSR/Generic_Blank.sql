@@ -10,6 +10,9 @@ GO
 -- exec [rspAggregateCounts] ',8,','10/01/2013' , '12/31/2013'
 -- exec [rspAggregateCounts] ',16,','09/01/2013' , '5/31/2014'
 -- exec [rspAggregateCounts] '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39','09/01/2013' , '5/31/2014'
+-- Edited by Benjamin Simmons
+-- Edit Date: 08/17/17
+-- Edit Reason: Optimized report so that it works better in Azure
 -- =============================================
 CREATE procedure [dbo].[rspAggregateCounts]
 (
@@ -20,24 +23,123 @@ CREATE procedure [dbo].[rspAggregateCounts]
 as
 begin
 
+	if object_id('tempdb..#tblAllScreens') is not null drop table #tblAllScreens
+	if object_id('tempdb..#tblAllKempes') is not null drop table #tblAllKempes
+	if object_id('tempdb..#tblEnrollmentInformation') is not null drop table #tblEnrollmentInformation
+	if object_id('tempdb..#tblTargetChildInformation') is not null drop table #tblTargetChildInformation
+	if object_id('tempdb..#tblHVLogInformation') is not null drop table #tblHVLogInformation
+
+	create table #tblAllScreens (
+		HVScreenPK int
+		, ScreenDate datetime
+		, ScreenResult char(1)
+	)
+
+	create table #tblAllKempes (
+		KempePK int
+		, KempeDate datetime
+		, KempeResult bit
+		, FOBPresent bit
+	)
+
+	create table #tblEnrollmentInformation (
+		HVCasePK int
+		, IntakeDate datetime
+		, DischargeDate datetime
+		, TCDOB datetime
+		, EDC datetime
+		, ProgramFK int
+	)
+
+	create table #tblTargetChildInformation (
+		IntakeDate datetime
+		, DischargeDate datetime
+		, TCIDPK int
+		, TCDOB datetime
+		, ProgramFK int
+	)
+
+	create table #tblHVLogInformation (
+		HVLogPK int
+		, VisitStartTime datetime
+		, VisitType char(6)
+		, HVCaseFK int
+		, OBPParticipated bit
+		, FatherFigureParticipated bit
+		, 
+	)
+
+	create table #tblOtherChildInformation (
+		OtherChildPK int
+		, IntakeDate datetime
+		, DischargeDate datetime
+		, LivingArrangement char(2)
+	)
+	
 	/* 
 		all screens used in this report
 	*/  
-	with cteAllScreens
-	as
-		(select HVScreenPK, ScreenDate, ScreenResult 
+	 insert into #tblAllScreens
+	 select HVScreenPK, ScreenDate, ScreenResult 
 		  from HVScreen s
 		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
 		  where ScreenDate <= @EndDate 
-		)
-	,	  
+
+	/* 
+		count of Kempes completed since beginning of program
+	*/  
+	insert into #tblAllKempes
+	select KempePK, KempeDate, KempeResult, FOBPresent
+		  from Kempe k
+		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  where KempeDate <= @EndDate
+
+	/*
+		information that several CTEs are based on
+	*/
+	insert into #tblEnrollmentInformation 
+	select c.HVCasePK, c.IntakeDate, cp.DischargeDate, c.TCDOB, c.EDC, cp.ProgramFK
+		from HVCase c
+			  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
+			  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = cp.ProgramFK
+
+	/*
+		information that several CTEs are based on
+	*/
+	insert into #tblTargetChildInformation
+	select IntakeDate, cp.DischargeDate, T.TCIDPK, T.TCDOB, cp.ProgramFK
+		from HVCase
+		  inner join CaseProgram cp on cp.HVCaseFK = HVCase.HVCasePK
+		  inner join TCID T on T.HVCaseFK = HVCase.HVCasePK
+		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = cp.ProgramFK
+
+	/*
+		information that several CTEs are based on
+	*/
+	insert into #tblHVLogInformation 
+	select HVLogPK, VisitStartTime, VisitType, HVCaseFK, OBPParticipated, FatherFigureParticipated
+		  from HVLog
+		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+
+	/*
+		information that several CTEs are based on
+	*/
+	insert into #tblOtherChildInformation
+	select OtherChildPK, IntakeDate, cp.DischargeDate, oc.LivingArrangement
+		  from HVCase
+		  inner join CaseProgram cp on cp.HVCaseFK = HVCase.HVCasePK
+		  --inner join TCID T on T.HVCaseFK = HVCase.HVCasePK
+		  inner join OtherChild oc on oc.HVCaseFK = HVCase.HVCasePK
+		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = cp.ProgramFK
+		
+	;	  
 	/*
 		count of screens completed since beginning of program
 	*/  
-	cteScreensCompletedSinceBeginning
+	with cteScreensCompletedSinceBeginning
 	as	
 		(select count(HVScreenPK) as countOfScreensCompletedSinceBeginning
-		  from cteAllScreens
+		  from #tblAllScreens
 		)
 	,
 	/* 
@@ -46,7 +148,7 @@ begin
 	cteScreensCompletedInPeriod
 	as
 		(select count(HVScreenPK) as countOfScreensCompletedInPeriod
-		  from cteAllScreens
+		  from #tblAllScreens
 		  where ScreenDate between @StartDate and @EndDate 
 		)
 	,
@@ -94,7 +196,7 @@ begin
 	ctePositiveScreensSinceBeginning
 	as
 		(select count(HVScreenPK) as countOfPositiveScreensSinceBeginning
-		  from cteAllScreens
+		  from #tblAllScreens
 		  where ScreenResult = '1'
 		)
 	,
@@ -104,7 +206,7 @@ begin
 	cteNegativeScreensSinceBeginning
 	as
 		(select count(HVScreenPK) as countOfNegativeScreensSinceBeginning
-		  from cteAllScreens
+		  from #tblAllScreens
 		  where ScreenResult = '0'
 		)
 	,
@@ -114,7 +216,7 @@ begin
 	ctePositiveScreensInPeriod
 	as
 		(select count(HVScreenPK) as countOfPositiveScreensInPeriod
-		  from cteAllScreens
+		  from #tblAllScreens
 		  where ScreenDate between @StartDate and @EndDate and
 				ScreenResult = '1'
 		)
@@ -125,29 +227,19 @@ begin
 	cteNegativeScreensInPeriod
 	as
 		(select count(HVScreenPK) as countOfNegativeScreensInPeriod
-	  		  from cteAllScreens
+	  		  from #tblAllScreens
 		  where ScreenDate between @StartDate and @EndDate and
 				ScreenResult = '0'
 		)
 	,
-	/* 
-		count of Kempes completed since beginning of program
-	*/  
-	cteAllKempes
-	as	
-		(select KempePK, KempeDate, KempeResult, FOBPresent
-		  from Kempe k
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
-		  where KempeDate <= @EndDate 
-		)
-	,
+	
 	/* 
 		count of Kempes completed since beginning of program
 	*/  
 	cteKempesCompletedSinceBeginning
 	as	
 		(select count(KempePK) as countOfKempesCompletedSinceBeginning
-		  from cteAllKempes
+		  from #tblAllKempes
 		)
 	,
 	/* 
@@ -156,7 +248,7 @@ begin
 	cteKempesCompletedInPeriod
 	as
 		(select count(KempePK) as countOfKempesCompletedInPeriod
-		  from cteAllKempes
+		  from #tblAllKempes
 		  where KempeDate between @StartDate and @EndDate 
 		)
 	,
@@ -166,7 +258,7 @@ begin
 	ctePositiveKempesSinceBeginning
 	as
 		(select count(KempePK) as countOfPositiveKempesSinceBeginning
-		  from cteAllKempes
+		  from #tblAllKempes
 		  where KempeResult = 1
 		)
 	,
@@ -176,7 +268,7 @@ begin
 	cteNegativeKempesSinceBeginning
 	as
 		(select count(KempePK) as countOfNegativeKempesSinceBeginning
-		  from cteAllKempes
+		  from #tblAllKempes
 		  where KempeResult = 0
 		)
 	,
@@ -187,7 +279,7 @@ begin
 	cteFOBPresentKempesSinceBeginning
 	as
 		(select count(KempePK) as countOfFOBPresentKempesSinceBeginning
-		  from cteAllKempes
+		  from #tblAllKempes
 		  where FOBPresent = 1
 		)
 	,
@@ -199,7 +291,7 @@ begin
 	ctePositiveKempesInPeriod
 	as
 		(select count(KempePK) as countOfPositiveKempesInPeriod
-		  from cteAllKempes
+		  from #tblAllKempes
 		  where KempeDate between @StartDate and @EndDate and
 				KempeResult = 1
 		)
@@ -210,7 +302,7 @@ begin
 	cteNegativeKempesInPeriod
 	as
 		(select count(KempePK) as countOfNegativeKempesInPeriod
-		  from cteAllKempes
+		  from #tblAllKempes
 		  where KempeDate between @StartDate and @EndDate and
 				KempeResult = 0
 		)
@@ -222,7 +314,7 @@ begin
 	cteFOBPresentKempesInPeriod
 	as
 		(select count(KempePK) as countOfFOBPresentKempesInPeriod
-		  from cteAllKempes
+		  from #tblAllKempes
 		  where KempeDate between @StartDate and @EndDate and
 				FOBPresent = 1
 		)
@@ -234,9 +326,7 @@ begin
 	cteFamiliesEnrolledSinceBeginning
 	as	
 		(select count(HVCasePK) as countOfFamiliesEnrolledSinceBeginning
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate <= @EndDate
 		)
 	,
@@ -246,9 +336,7 @@ begin
 	cteFamiliesEnrolledPrenatallySinceBeginning
 	as	
 		(select count(HVCasePK) as countOfFamiliesEnrolledPrenatallySinceBeginning
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate <= @EndDate and
 				isnull(TCDOB, EDC) > IntakeDate
 		)
@@ -259,9 +347,7 @@ begin
 	cteFamiliesEnrolledPostnatallySinceBeginning
 	as	
 		(select count(HVCasePK) as countOfFamiliesEnrolledPostnatallySinceBeginning
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate <= @EndDate and
 				isnull(TCDOB, EDC) <= IntakeDate
 		)
@@ -272,9 +358,7 @@ begin
 	cteFamiliesEnrolledInPeriod
 	as	
 		(select count(HVCasePK) as countOfFamiliesEnrolledInPeriod
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate between @StartDate and @EndDate
 		)
 	,
@@ -284,9 +368,7 @@ begin
 	cteFamiliesEnrolledPrenatallyInPeriod
 	as	
 		(select count(HVCasePK) as countOfFamiliesEnrolledPrenatallyInPeriod
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate between @StartDate and @EndDate and
 				isnull(TCDOB, EDC) > IntakeDate
 		)
@@ -297,9 +379,7 @@ begin
 	cteFamiliesEnrolledPostnatallyInPeriod
 	as	
 		(select count(HVCasePK) as countOfFamiliesEnrolledPostnatallyInPeriod
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate between @StartDate and @EndDate and
 				isnull(TCDOB, EDC) <= IntakeDate
 		)
@@ -310,9 +390,7 @@ begin
 	cteFamiliesServedSinceBeginning
 	as	
 		(select count(HVCasePK) as countOfFamiliesServedSinceBeginning
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate <= @EndDate 
 		)
 	,
@@ -322,9 +400,7 @@ begin
 	cteFamiliesServedInPeriod
 	as	
 		(select count(HVCasePK) as countOfFamiliesServedInPeriod
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate <= @EndDate 
 				and (DischargeDate is null or DischargeDate >= @StartDate)
 		)
@@ -335,9 +411,7 @@ begin
 	cteFamiliesEnrolledAtEndOfPeriod
 	as	
 		(select count(HVCasePK) as countOfFamiliesEnrolledAtEndOfPeriod
-		  from HVCase c
-		  inner join CaseProgram cp on cp.HVCaseFK = c.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblEnrollmentInformation
 		  where IntakeDate <= @EndDate and 
 				(DischargeDate is null or DischargeDate > @EndDate)
 		)
@@ -348,12 +422,9 @@ begin
 	cteTargetChildrenBornSinceBeginning
 	as
 		(select count(TCIDPK) as countOfTargetChildrenBornSinceBeginning 
-		  from HVCase
-		  inner join CaseProgram cp on cp.HVCaseFK = HVCase.HVCasePK
-		  inner join TCID T on T.HVCaseFK = HVCase.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = cp.ProgramFK
+		  from #tblTargetChildInformation
 		  where IntakeDate <= @EndDate 
-				and T.TCDOB <= @EndDate
+				and TCDOB <= @EndDate
 		)
 	,
 	/* 
@@ -362,12 +433,9 @@ begin
 	cteTargetChildrenBornInPeriod
 	as
 		(select count(TCIDPK) as countOfTargetChildrenBornInPeriod 
-		  from HVCase
-		  inner join CaseProgram cp on cp.HVCaseFK = HVCase.HVCasePK
-		  inner join TCID T on T.HVCaseFK = HVCase.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = cp.ProgramFK
+		  from #tblTargetChildInformation
 		  where IntakeDate <= @EndDate 
-				and T.TCDOB between @StartDate and @EndDate
+				and TCDOB between @StartDate and @EndDate
 		)
 	--,
 	--/* 
@@ -390,13 +458,10 @@ begin
 	cteOtherTargetChildrenServedInPeriod
 	as
 		(select count(TCIDPK) as countOfOtherTargetChildrenServedInPeriod 
-		  from HVCase
-		  inner join CaseProgram cp on cp.HVCaseFK = HVCase.HVCasePK
-		  inner join TCID T on T.HVCaseFK = HVCase.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = cp.ProgramFK
+		  from #tblTargetChildInformation
 		  where IntakeDate <= @EndDate 
 				and (DischargeDate is null or DischargeDate >= @StartDate)
-				and T.TCDOB < @StartDate
+				and TCDOB < @StartDate
 		)
 	,
 	/* 
@@ -405,15 +470,11 @@ begin
 	cteOtherChildrenServedSinceBeginning
 	as
 		(select count(OtherChildPK) as countOfOtherChildrenServedSinceBeginning
-		  from HVCase
-		  inner join CaseProgram cp on cp.HVCaseFK = HVCase.HVCasePK
-		  --inner join TCID T on T.HVCaseFK = HVCase.HVCasePK
-		  inner join OtherChild oc on oc.HVCaseFK = HVCase.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = cp.ProgramFK
+		  from #tblOtherChildInformation
 		  where IntakeDate <= @EndDate 
 				-- and (DischargeDate is null or DischargeDate >= @StartDate)
 		  --and T.TCDOB<='09/30/13'
-		  and oc.LivingArrangement='01'
+		  and LivingArrangement='01'
 		)
 	,
 	/* 
@@ -422,15 +483,11 @@ begin
 	cteOtherChildrenServedInPeriod
 	as
 		(select count(OtherChildPK) as countOfOtherChildrenServedInPeriod
-		  from HVCase
-		  inner join CaseProgram cp on cp.HVCaseFK = HVCase.HVCasePK
-		  --inner join TCID T on T.HVCaseFK = HVCase.HVCasePK
-		  inner join OtherChild oc on oc.HVCaseFK = HVCase.HVCasePK
-		  inner join dbo.SplitString(@ProgramFKs, ',') ss on ListItem = cp.ProgramFK
+		  from #tblOtherChildInformation
 		  where IntakeDate <= @EndDate 
 				and (DischargeDate is null or DischargeDate >= @StartDate)
 		  --and T.TCDOB<='09/30/13'
-		  and oc.LivingArrangement='01'
+		  and LivingArrangement='01'
 		)
 	,
 	/* 
@@ -439,8 +496,7 @@ begin
 	cteHomeVisitLogsSinceBeginning
 	as
 		(select count(HVLogPK) as countOfHomeVisitLogsSinceBeginning
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) <= @EndDate
 		)
 	,
@@ -450,10 +506,9 @@ begin
 	cteCompletedHomeVisitLogsSinceBeginning
 	as
 		(select count(HVLogPK) as countOfCompletedHomeVisitLogsSinceBeginning
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) <= @EndDate
-				and VisitType <> '00010'
+				and VisitType <> '000100'
 		)
 	,
 	/* 
@@ -462,10 +517,9 @@ begin
 	cteAttemptedHomeVisitLogsSinceBeginning
 	as
 		(select count(HVLogPK) as countOfAttemptedHomeVisitLogsSinceBeginning
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) <= @EndDate
-				and VisitType = '00010'
+				and VisitType = '000100'
 		)
 	,
 	/* 
@@ -474,8 +528,7 @@ begin
 	cteHomeVisitLogsInPeriod
 	as
 		(select count(HVLogPK) as countOfHomeVisitLogsInPeriod
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) between @StartDate and @EndDate
 		)
 	,
@@ -485,10 +538,9 @@ begin
 	cteCompletedHomeVisitLogsInPeriod
 	as
 		(select count(HVLogPK) as countOfCompletedHomeVisitLogsInPeriod
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) between @StartDate and @EndDate
-				and VisitType <> '00010'
+				and VisitType <> '000100'
 		)
 	,
 	/* 
@@ -497,10 +549,9 @@ begin
 	cteAttemptedHomeVisitLogsInPeriod
 	as
 		(select count(HVLogPK) as countOfAttemptedHomeVisitLogsInPeriod
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) between @StartDate and @EndDate and 
-				VisitType = '00010'
+				VisitType = '000100'
 		)
 	,
 	/* 
@@ -509,8 +560,7 @@ begin
 	cteFamiliesWithAtLeastOneHomeVisitSinceBeginning
 	as
 		(select count(distinct HVCaseFK) as countOfFamiliesWithAtLeastOneHomeVisitSinceBeginning
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) <= @EndDate
 		)
 	,
@@ -520,8 +570,7 @@ begin
 	cteFamiliesWithAtLeastOneHomeVisitInPeriod
 	as
 		(select count(distinct HVCaseFK) as countOfFamiliesWithAtLeastOneHomeVisitInPeriod
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) between @StartDate and @EndDate
 		)
 	,
@@ -531,8 +580,7 @@ begin
 	cteFamiliesWithAtLeastOneHomeVisitIncludingOBPOrFatherSinceBeginning
 	as
 		(select count(distinct HVCaseFK) as countOfFamiliesWithAtLeastOneHomeVisitIncludingOBPOrFatherSinceBeginning
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) <= @EndDate and
 				(OBPParticipated = 1 or FatherFigureParticipated = 1)
 		)
@@ -543,8 +591,7 @@ begin
 	cteFamiliesWithAtLeastOneHomeVisitIncludingOBPOrFatherInPeriod
 	as
 		(select count(distinct HVCaseFK) as countOfFamiliesWithAtLeastOneHomeVisitIncludingOBPOrFatherInPeriod
-		  from HVLog
-		  inner join SplitString(@ProgramFKs, ',') ss on ListItem = ProgramFK
+		  from #tblHVLogInformation
 		  where convert(date, VisitStartTime) between @StartDate and @EndDate and
 				(OBPParticipated = 1 or FatherFigureParticipated = 1)
 		)
@@ -820,6 +867,13 @@ begin
 		 , countOfFamiliesWithAtLeastOneHomeVisitIncludingOBPOrFatherInPeriod
 		 --, pctOfFamiliesWithAtLeastOneHomeVisitIncludingOBPOrFatherInPeriod 
 	from cteFinal
+
+	drop table #tblAllScreens
+	drop table #tblAllKempes
+	drop table #tblEnrollmentInformation
+	drop table #tblTargetChildInformation
+	drop table #tblHVLogInformation
+	drop table #tblOtherChildInformation
 
 end
 

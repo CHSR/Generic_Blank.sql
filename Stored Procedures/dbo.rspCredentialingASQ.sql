@@ -48,9 +48,24 @@ AS
 	declare @n int = 0
 	select @n = case when @UnderCutoffOnly = 'Y' then 1 else 0 end
 
+	if object_id('tempdb..#cteAll') is not null drop table #cteAll
+
+	create table #cteAll (
+		   supervisor varchar(100)
+		 , worker varchar(100)
+		 , PC1ID char(13)
+		 , TCName varchar(450)
+		 , TCDOB varchar(12)
+		 , GestationalAge int
+		 , TCAge varchar(150)
+		 , DateCompleted varchar(12)
+		 , InWindow varchar(50)
+		 , [TCAgeCode] char(2)
+		 , ASQTCReceiving int
+	)
 
 ;with cteMain
-	as (
+as (
 	select
 		  LTRIM(RTRIM(supervisor.firstname))+' '+LTRIM(RTRIM(supervisor.lastname)) supervisor
 		 ,LTRIM(RTRIM(fsw.firstname))+' '+LTRIM(RTRIM(fsw.lastname)) worker
@@ -99,10 +114,9 @@ AS
 			 and wp.supervisorfk = ISNULL(@supervisorfk,wp.supervisorfk)
 			 and d.PC1ID = case when @pc1ID = '' then d.PC1ID else @pc1ID end
 			 and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
-),
+)
 
-
-cteNone
+, cteNone
 	as (
 	select
 		  LTRIM(RTRIM(supervisor.firstname))+' '+LTRIM(RTRIM(supervisor.lastname)) supervisor
@@ -138,13 +152,12 @@ cteNone
 			 AND (CASE WHEN @UnderCutoffOnly = 'Y' THEN 1 ELSE 0 END = 0)
 )
 
-,cteAll	as (
+insert into #cteAll	
 	  SELECT DISTINCT * FROM cteMain
 	  UNION all
 	  SELECT * FROM cteNone 
-)	
 	
-, cteAdjAge AS (
+; with cteAdjAge AS (
 	SELECT * 
 	
          ,CASE WHEN (CASE WHEN dateadd(year, datediff (year, a.TCDOB, getdate()), a.TCDOB) > getdate()
@@ -153,7 +166,7 @@ cteNone
           END) < 2 AND a.GestationalAge <= 40 
           THEN convert(DATETIME, a.TCDOB, 101) + (40 - a.GestationalAge) * 7
           ELSE convert(DATETIME, a.TCDOB, 101) END AdjTCDOB
-	FROM cteAll AS a
+	FROM #cteAll AS a
 )
 
 , cteFinal AS (
@@ -225,4 +238,6 @@ a.Meets END AS Meets, CASE WHEN a.[ASQTCReceiving] = 1 THEN 'Yes' ELSE 'No' END 
 FROM cteYYY AS a JOIN cteASQTCReceiving AS b ON a.PC1ID = b.PC1ID
 WHERE Age > 0 AND Age <= 5
 order by Age DESC, worker, PC1ID, TCAgeCode
+
+drop table #cteAll
 GO

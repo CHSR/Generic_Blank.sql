@@ -8,6 +8,9 @@ GO
 -- Description:	FAW Monthly Report
 -- exec rspProgramDemographics @programfk = 18, @StartDt = N'12/01/11', @EndDt = N'11/30/12', @SiteFK = 21 
 -- Edit date: 10/11/2013 CP - workerprogram was NOT duplicating cases when worker transferred
+-- Edited by Benjamin Simmons
+-- Edit Date: 8/17/17
+-- Edit Reason: Optimized report so that it works better on Azure
 -- =============================================
 CREATE procedure [dbo].[rspProgramDemographics]
     --@programfk int = null,
@@ -31,64 +34,38 @@ as
 	set @SiteFK = case when dbo.IsNullOrEmpty(@SiteFK) = 1 then 0 else @SiteFK end;
 	set @CaseFiltersPositive = case	when @CaseFiltersPositive = '' then null
 									else @CaseFiltersPositive
-							   end;
+							   end
+							 
+	if object_id('tempdb..#x') is not null drop table #x 
 
-	with MotherWithOtherChildren
-	as (select count(distinct a.HVCasePK) [PD08MotherWithOtherChild]
-			from
-				dbo.HVCase as a 
-				join dbo.CaseProgram as b on a.HVCasePK = b.HVCaseFK
-				join PC as c on c.PCPK = a.PC1FK 
-				join Intake as d on d.HVCaseFK = a.HVCasePK
-				join OtherChild as oc on oc.FormFK = d.IntakePK and oc.FormType = 'IN' and oc.Relation2PC1 = '01'
-				inner join worker fsw on b.CurrentFSWFK = fsw.workerpk
-				inner join workerprogram wp on wp.workerfk = fsw.workerpk
-				inner join dbo.SplitString(@programfk,',') on b.programfk = listitem
-				inner join dbo.udfCaseFilters(@casefilterspositive, '', @programfk) cf on cf.HVCaseFK = a.HVCasePK
-			where
-				 (b.DischargeDate is null
-				 or b.DischargeDate >= @StartDt)
-				 and a.IntakeDate <= @EndDt
-				 --and b.ProgramFK = @programfk
-				 and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
-	),
-	TCMedicaid_5
-	as (select a.HVCasePK
-			  ,tc.MultipleBirth [MultipleBirth]
-			  ,tc.NumberofChildren [NumberofChildren]
-			  ,caTC.TCReceivingMedicaid [TCMedicaid]
-			  ,caTC.CommonAttributesPK [TCIDStatus]
-			from
-				dbo.HVCase as a
-				join dbo.CaseProgram as b on a.HVCasePK = b.HVCaseFK
-				join PC as c on c.PCPK = a.PC1FK
-				join Intake as d on d.HVCaseFK = a.HVCasePK
-				join TCID as tc on tc.HVCaseFK = a.HVCasePK and tc.TCDOB <= @EndDt
-				join CommonAttributes as caTC on caTC.FormFK = tc.TCIDPK and caTC.FormType = 'TC'
-				inner join worker fsw on b.CurrentFSWFK = fsw.workerpk
-				inner join workerprogram wp on wp.workerfk = fsw.workerpk
-				inner join dbo.SplitString(@programfk,',') on b.programfk = listitem
-				inner join dbo.udfCaseFilters(@casefilterspositive, '', @programfk) cf on cf.HVCaseFK = a.HVCasePK
-			where
-				 (b.DischargeDate is null
-				 or b.DischargeDate >= @StartDt)
-				 and a.IntakeDate <= @EndDt
-				 --and b.ProgramFK = @programfk
-				 and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
-	),
-	TCMedicaid
-	as (select sum(case
-				   when TCMedicaid = 1 then
-					   1
-				   else
-					   0
-			   end) [PD05TCMedicaid]
-			  ,count(*) [PD05TC]
-			from
-				TCMedicaid_5
-	),
-	x
-	as (select distinct a.HVCasePK
+	create table #x (
+		HVCasePK int
+		, [Race] char(2)
+		, [Age] int
+		, [yrEnrolled] int
+		, [Edu] char(2)
+		, [pc1Employed] char(1)
+		, [pc2Employed] char(1)
+		, [obpEmployed] char(1)
+		, [obpTrainingProgram] char(1)
+		, [OBPInHousehold] char(1)
+		, [pc1TrainingProgram] char(1)
+		, [pc2TrainingProgram] char(1)
+		, [pc1Medicaid] char(1)
+		, [FoodStamps] char(1)
+		, [TANF] char(1)
+		, [WIC] char(1)
+		, [pc1MaritalStatus] char(2)
+		, [PC2InHousehold] bit
+		, [lastdate] datetime
+		, [PrenatalStatus] bit
+		, [NeedInterpreter] bit
+	)
+
+							   
+	
+	insert into #x
+	select distinct a.HVCasePK
 					   ,c.Race [Race]
 					   ,cast(datediff(dd,c.PCDOB,a.IntakeDate)/365.25 as int) [Age]
 					   ,cast(datediff(dd,a.IntakeDate,case
@@ -158,8 +135,64 @@ as
 				 and a.IntakeDate <= @EndDt
 				 --and b.ProgramFK = @programfk
 				 and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
+	;
+
+	with MotherWithOtherChildren
+	as (select count(distinct a.HVCasePK) [PD08MotherWithOtherChild]
+			from
+				dbo.HVCase as a 
+				join dbo.CaseProgram as b on a.HVCasePK = b.HVCaseFK
+				join PC as c on c.PCPK = a.PC1FK 
+				join Intake as d on d.HVCaseFK = a.HVCasePK
+				join OtherChild as oc on oc.FormFK = d.IntakePK and oc.FormType = 'IN' and oc.Relation2PC1 = '01'
+				inner join worker fsw on b.CurrentFSWFK = fsw.workerpk
+				inner join workerprogram wp on wp.workerfk = fsw.workerpk
+				inner join dbo.SplitString(@programfk,',') on b.programfk = listitem
+				inner join dbo.udfCaseFilters(@casefilterspositive, '', @programfk) cf on cf.HVCaseFK = a.HVCasePK
+			where
+				 (b.DischargeDate is null
+				 or b.DischargeDate >= @StartDt)
+				 and a.IntakeDate <= @EndDt
+				 --and b.ProgramFK = @programfk
+				 and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
 	),
-	y
+	TCMedicaid_5
+	as (select a.HVCasePK
+			  ,tc.MultipleBirth [MultipleBirth]
+			  ,tc.NumberofChildren [NumberofChildren]
+			  ,caTC.TCReceivingMedicaid [TCMedicaid]
+			  ,caTC.CommonAttributesPK [TCIDStatus]
+			from
+				dbo.HVCase as a
+				join dbo.CaseProgram as b on a.HVCasePK = b.HVCaseFK
+				join PC as c on c.PCPK = a.PC1FK
+				join Intake as d on d.HVCaseFK = a.HVCasePK
+				join TCID as tc on tc.HVCaseFK = a.HVCasePK and tc.TCDOB <= @EndDt
+				join CommonAttributes as caTC on caTC.FormFK = tc.TCIDPK and caTC.FormType = 'TC'
+				inner join worker fsw on b.CurrentFSWFK = fsw.workerpk
+				inner join workerprogram wp on wp.workerfk = fsw.workerpk
+				inner join dbo.SplitString(@programfk,',') on b.programfk = listitem
+				inner join dbo.udfCaseFilters(@casefilterspositive, '', @programfk) cf on cf.HVCaseFK = a.HVCasePK
+			where
+				 (b.DischargeDate is null
+				 or b.DischargeDate >= @StartDt)
+				 and a.IntakeDate <= @EndDt
+				 --and b.ProgramFK = @programfk
+				 and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
+	),
+	TCMedicaid
+	as (select sum(case
+				   when TCMedicaid = 1 then
+					   1
+				   else
+					   0
+			   end) [PD05TCMedicaid]
+			  ,count(*) [PD05TC]
+			from
+				TCMedicaid_5
+	),
+
+	 y
 	as (select count(*) [n]
 			  ,sum(case
 				   when x.Race = '01' then
@@ -344,7 +377,7 @@ as
 					   0
 			   end) [PD11NeedInterpreter]
 			from
-				x as x
+				#x as x
 	),
 	z
 	as (select y.*
@@ -409,4 +442,6 @@ as
 
 		from
 			z
+
+drop table #x
 GO

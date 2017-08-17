@@ -6,6 +6,9 @@ GO
 -- Author:		Chris Papas
 -- Create date: 05/22/2013
 -- Description:	Report Training Culturally Sensitive
+-- Edited by Benjamin Simmons
+-- Edit Date: 8/17/17
+-- Edit Reason: Optimized stored procedure so that it works better on Azure
 -- =============================================
 CREATE procedure [dbo].[rspTrainingCulturallySensitive]
 	
@@ -24,25 +27,25 @@ declare @sdate2 as datetime = @sdate
 declare @edate2 as datetime = @edate
 declare @progfk2 as int = @progfk
 
+if object_id('tempdb..#cteEventDates') is not null drop table #cteEventDates
+create table #cteEventDates (
+	workerpk int
+	, wrkrLName char(30)
+	, MyWrkrCount char(1)
+	, WorkerName varchar(60)
+	, HireDate datetime
+)
 
 --Get FAW's in time period
-;WITH  cteEventDates AS (
+insert into #cteEventDates
 	SELECT workerpk, wrkrLName
 	, '1' AS MyWrkrCount
 	, rtrim(wrkrFname) + ' ' + rtrim(wrkrLName) as WorkerName
 	, HireDate FROM [dbo].[fnGetWorkerEventDates](@progfk2, NULL, NULL)
 	WHERE TerminationDate IS NULL
 	AND DATEDIFF(d,HireDate, @edate2) > 365
-)
 
-, cteWorkerCount AS (
-	SELECT workerpk
-	, COUNT(workerpk) OVER (PARTITION BY MyWrkrCount) AS WorkerCount
-	FROM cteEventDates
-	)
-
-
-, cteCultureSensitive AS (
+;WITH cteCultureSensitive AS (
 	select WorkerPK
 	, WorkerName
 	, HireDate
@@ -50,8 +53,8 @@ declare @progfk2 as int = @progfk
 	, MIN(TrainingDate) as CulturallySensitiveDate
 	, CulturalCompetency
 	, ROW_NUMBER() OVER ( PARTITION BY workerpk ORDER BY CulturalCompetency DESC ) AS 'RowNumber'
-	From cteEventDates
-	LEFT JOIN TrainingAttendee ta ON cteEventDates.WorkerPK = ta.WorkerFK 
+	From #cteEventDates
+	LEFT JOIN TrainingAttendee ta ON #cteEventDates.WorkerPK = ta.WorkerFK 
 	LEFT JOIN Training t on ta.TrainingFK = t.TrainingPK
 	LEFT JOIN TrainingDetail td on td.TrainingFK=t.TrainingPK
 	LEFT join codeTopic cdT on cdT.codeTopicPK=td.TopicFK
@@ -62,6 +65,12 @@ declare @progfk2 as int = @progfk
 	, WorkerName
 	, HireDate, MyWrkrCount
 )
+
+, cteWorkerCount AS (
+	SELECT WorkerPK
+	, COUNT(WorkerPK) OVER (PARTITION BY MyWrkrCount) AS WorkerCount
+	FROM #cteEventDates
+	)
 
 ,  cteCultSenses as (
 	select WorkerPK
@@ -98,14 +107,14 @@ declare @progfk2 as int = @progfk
 
 , cteCultSense AS (
   
-	select cteEventDates.WorkerPK
-	, cteEventDates.WorkerName
-	, cteEventDates.HireDate
+	select #cteEventDates.WorkerPK
+	, #cteEventDates.WorkerName
+	, #cteEventDates.HireDate
 	, CulturallySensitiveDate
 	, TrainingTitle
 	, CulturalCompetency
-	from cteEventDates
-	LEFT JOIN  cteCultSense2 ON cteEventDates.WorkerPK = cteCultSense2.WorkerPK	
+	from #cteEventDates
+	LEFT JOIN  cteCultSense2 ON #cteEventDates.WorkerPK = cteCultSense2.WorkerPK	
 )
 
 , cteFinal as (
@@ -149,6 +158,6 @@ declare @progfk2 as int = @progfk
 FROM cteFinal, cteCountMeeting
 --LEFT JOIN cteCountMeeting ON cteCountMeeting.WorkerCount = cteFinal.WorkerCount
 
-
+drop table #cteEventDates
 END
 GO

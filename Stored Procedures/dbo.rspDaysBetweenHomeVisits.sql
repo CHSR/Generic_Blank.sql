@@ -6,8 +6,16 @@ GO
 CREATE PROCEDURE [dbo].[rspDaysBetweenHomeVisits](@programfk AS INT)
 AS
 BEGIN
-	--currently served clients cohort
-	WITH cteMAIN AS (
+
+if object_id('tempdb..#cteMAIN') is not null drop table #cteMAIN
+
+create table #cteMAIN (
+			CurrentLevelFK int
+			,LevelName varchar(50)
+			,PC1ID char(13)
+			,HVCaseFK int)
+
+insert into #cteMAIN 
 		SELECT
 			CurrentLevelFK
 			,codelevel.LevelName
@@ -22,16 +30,15 @@ BEGIN
 			AND caseprogress >= 9
 			AND CaseStartDate <= GetDate()
 			AND DischargeDate IS NULL
-	)
 
 	--get the most recent HV Visit from cohort above
-	,cteLastVisit AS (
+	;with cteLastVisit AS (
 		SELECT DISTINCT
-			cteMAIN.HVCaseFK
-			,MAX(VisitStartTime) OVER (PARTITION BY cteMAIN.HVCaseFK) AS HVDATE2
+			#cteMAIN.HVCaseFK
+			,MAX(VisitStartTime) OVER (PARTITION BY #cteMAIN.HVCaseFK) AS HVDATE2
 		FROM
 			dbo.HVLog
-			INNER JOIN cteMAIN ON dbo.HVLog.HVCaseFK = cteMAIN.HVCaseFK
+			INNER JOIN #cteMAIN ON dbo.HVLog.HVCaseFK = #cteMAIN.HVCaseFK
 		WHERE
 			LEFT(visittype, 1) = '1'
 	)
@@ -66,15 +73,15 @@ BEGIN
 	,cteDatesBetween AS (
 		SELECT
 			cteSecondToLastVisit.HVCaseFK
-			,cteMAIN.pc1id
-			,cteMain.LevelName
+			,#cteMAIN.pc1id
+			,#cteMAIN.LevelName
 			,hvdate1
 			,HVDATE2
 			,DATEDIFF(dd, hvdate1,  hvdate2) AS DaysBetweenHomeVisits
 		FROM
 			cteSecondToLastVisit
 			INNER JOIN cteLastVisitPlusHVLOGPK CLV ON CLV.HVCaseFK = cteSecondToLastVisit.HVCaseFK
-			INNER JOIN cteMAIN ON cteMAIN.HVCaseFK = cteSecondToLastVisit.hvcasefk
+			INNER JOIN #cteMAIN ON #cteMAIN.HVCaseFK = cteSecondToLastVisit.hvcasefk
 		WHERE
 			clv.RowNum = 1
 	)
@@ -133,6 +140,8 @@ BEGIN
 		INNER JOIN cteLevelCodes ON ctePutTheTwoTogether.Level = cteLevelCodes.LevelName
 	ORDER BY
 		cteLevelCodes.codeLevelPK
-		,Difference DESC
-END
+		,Difference desc
+
+	drop table #cteMAIN
+end
 GO

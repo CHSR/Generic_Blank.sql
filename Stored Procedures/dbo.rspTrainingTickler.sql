@@ -11,14 +11,17 @@ GO
 -- Edited by: Chris Papas
 -- Edit Date: 3-13-2017
 -- Edit Reason: Codetopic 12.1 'Stop Gap for Supervisors' was appearing for non-Supervisors
+-- Edited by: Benjamin Simmons
+-- Edit Date: 08-15-2017
+-- Edit Reason: Report was running slowly on Azure.  (Removed unnecessary CTEs and implemented a temp table)
 -- =============================================
 CREATE PROCEDURE [dbo].[rspTrainingTickler]
 	-- Add the parameters for the stored procedure here
 	@progfk AS INT,
 	@workerfk AS INT,
-	@supervisorfk AS INT
+	@supervisorfk AS int
 AS
-BEGIN
+begin
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
@@ -26,6 +29,34 @@ BEGIN
 IF @supervisorfk = 0 SET @supervisorfk = NULL
 IF @workerfk = 0 SET @workerfk = NULL
 
+if object_id('tempdb..#cteEverythingRequired') is not null drop table #cteEverythingRequired
+create table #cteEverythingRequired (
+			workerpk int
+			, wrkrLName char(30)
+			, WorkerName char(60)
+			, hiredate datetime
+			, FirstKempeDate datetime
+			, FirstHomeVisitDate datetime
+			, SupervisorFirstEvent datetime
+			, FirstEvent datetime
+			, FirstASQDate datetime
+			, SupervisorInitialStart datetime
+			, FAWInitialStart datetime
+			, FSWInitialStart datetime
+			, TerminationDate datetime
+			, SupervisorFK int
+			, TopicFK int
+			, TopicName char(150)
+			, TopicCode numeric(4, 1)
+			, SATCompareDateField nvarchar(50)
+			, SATInterval nvarchar(50)
+			, satname nvarchar(10)
+			, DaysAfter int
+			, SubTopicCode char(1)
+			, SubTopicName char(100)
+			, SubTopicPK int
+			, TrainingTickler nchar(3)
+)
 
 ; WITH cteTopicList AS (
 SELECT DISTINCT codeTopicPK as TopicFK, TopicName, TopicCode, SATCompareDateField
@@ -92,7 +123,7 @@ WHERE TrainingTickler='YES'
 )
 
 
-, cteEverythingRequired AS (
+insert into #cteEverythingRequired
 		SELECT workerpk, wrkrLName
 			, WorkerName
 			, hiredate
@@ -122,11 +153,10 @@ WHERE TrainingTickler='YES'
 			  WHEN SupervisorInitialStart IS NULL AND (TopicCode = '9.1' or TopicCode = '12.1') THEN 0 --Remove if worker is not a Supervisor
 			ELSE 1
 			END = 1
-)
 
 	
 		
-, cteReadyForRemoval AS (
+; with cteReadyForRemoval AS (
 		SELECT DISTINCT workerpk, wrkrLName
 			, WorkerName
 			, hiredate
@@ -160,7 +190,7 @@ WHERE TrainingTickler='YES'
 						
 					) AS TrainingDate
 			--, t.TrainingDate
-		FROM cteEverythingRequired ER
+		FROM #cteEverythingRequired ER
 		)
 		
 	
@@ -305,7 +335,7 @@ WHERE TrainingTickler='YES'
 			)
 
 
-, cteAlmostFinal_a AS (		
+, cteFinal AS (		
 SELECT workerpk
 			, WorkerName
 			, hiredate
@@ -347,33 +377,6 @@ SELECT workerpk
 			  END AS 'Removals'
 FROM cteRemovals)
 
-
-
-			
-, cteAlmostFinal AS (		
-SELECT workerpk
-			, WorkerName
-			, hiredate
-			, FirstKempeDate
-			, FirstHomeVisitDate
-			, SupervisorInitialStart
-			, FAWInitialStart
-			, FSWInitialStart
-			, TopicName
-			, TopicCode
-			, SubTopicCode
-			, CSST
-			, SubTopicName
-			, TrainingDate
-			, [Grouping]
-			, [DateDue]	
-FROM cteAlmostFinal_a 
-
-WHERE Removals IS NULL
-)
-
-
-, cteFinal AS (
 SELECT workerpk 
 			, WorkerName
 			, hiredate
@@ -390,28 +393,11 @@ SELECT workerpk
 			, TrainingDate
 			, [Grouping]
 			, [DateDue]	
-FROM cteAlmostFinal
-)
-
-SELECT workerpk
-			, WorkerName
-			, hiredate
-			, FirstKempeDate
-			, FirstHomeVisitDate
-			, SupervisorInitialStart
-			, FAWInitialStart
-			, FSWInitialStart
-			, TopicName
-			, TopicCode
-			, SubTopicCode
-			, CSST
-			, SubTopicName
-			, TrainingDate
-			, [Grouping]
-			, [DateDue]	
-FROM cteFinal 
-WHERE TopicCode <> '98'
+FROM cteFinal
+WHERE TopicCode <> '98' and Removals IS NULL
 ORDER BY Workerpk, TopicCode, SubTopicCode
+
+drop table #cteEverythingRequired
 
 END
 GO
