@@ -2,26 +2,25 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE PROCEDURE  [dbo].[spGetServiceReferralsbyCaseStartDate](
-	@HVCaseFK INT,
-	@CaseStartDate DATETIME
-)
+CREATE procedure [dbo].[spGetServiceReferralsbyCaseStartDate] (@HVCaseFK int
+													, @CaseStartDate datetime
+													 )
+as
+	begin
+		set nocount on;
 
-AS
-BEGIN
-	SET NOCOUNT ON;
-
-    SELECT DISTINCT sr.*
-	FROM ServiceReferral sr
-	INNER JOIN caseprogram cp
-	ON sr.hvcasefk = cp.hvcasefk
-	AND sr.programfk = cp.programfk
-	WHERE sr.HVCaseFK = @HVCaseFK
-	AND casestartdate <= @CaseStartDate
-	AND referraldate <= ISNULL(dischargedate,GETDATE())
-	ORDER BY referraldate
+		select distinct
+				sr.*
+		from	ServiceReferral sr
+		inner join CaseProgram cp on sr.HVCaseFK = cp.HVCaseFK
+									 and sr.ProgramFK = cp.ProgramFK
+		where	sr.HVCaseFK = @HVCaseFK
+				and CaseStartDate <= @CaseStartDate
+				--and ReferralDate <= isnull(DischargeDate, getdate())
+		order by ReferralDate;
 	 
-END
+	end;
+
 
 
 

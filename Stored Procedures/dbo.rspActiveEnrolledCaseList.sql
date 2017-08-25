@@ -14,7 +14,8 @@ CREATE procedure [dbo].[rspActiveEnrolledCaseList]-- Add the parameters for the 
     @EndDt               datetime,
 	@WorkerFK            int = NULL,
     @SiteFK              int = 0,
-    @CaseFiltersPositive varchar(200)
+    @CaseFiltersPositive varchar(200),
+    @CaseFiltersNegative varchar(200)
 as
 
 	--DECLARE @StartDt DATE = '01/01/2014'
@@ -34,6 +35,10 @@ as
 	set @SiteFK = case when dbo.IsNullOrEmpty(@SiteFK) = 1 then 0 else @SiteFK end;
 	set @CaseFiltersPositive = case	when @CaseFiltersPositive = '' then null
 									else @CaseFiltersPositive
+							   end;
+
+	set @CaseFiltersNegative = case	when @CaseFiltersNegative = '' then null
+									else @CaseFiltersNegative
 							   end;
 
 	select rtrim(PC.PCLastName)+cast(PC.PCPK as varchar(10)) [key01]
@@ -67,7 +72,7 @@ as
 		  ,convert(varchar(12),ca.FormDate,101) [Eligible]
 		  ,(select count(*)
 				from HVLog
-				where VisitType <> '0001'
+				where SUBSTRING(VisitType, 4, 1) <> '1'
 					 and cast(VisitStartTime as date) <= @EndDt
 					 and cast(VisitStartTime as date) >= b.IntakeDate
 					 and HVCaseFK = b.HVCasePK
@@ -86,12 +91,12 @@ as
 		  ,ca.FormInterval
 		  ,rtrim(T.TCLastName)+', '+rtrim(T.TCFirstName) [tcName]
 		  ,convert(varchar(12),T.TCDOB,101) [tcDOB]
-		  ,case when ls.SiteCode is null then '' else ls.SiteCode end SiteCode
+		  ,case when ls.SiteName is null then '' else ls.SiteName end as SiteCode
 
 		from CaseProgram as a
 			join HVCase as b on a.HVCaseFK = b.HVCasePK
 			inner join dbo.SplitString(@ProgramFK,',') on a.ProgramFK = listitem
-			inner join dbo.udfCaseFilters(@CaseFiltersPositive,'', @ProgramFK) cf on cf.HVCaseFK = a.HVCaseFK
+			inner join dbo.udfCaseFilters(@CaseFiltersPositive,@CaseFiltersNegative, @ProgramFK) cf on cf.HVCaseFK = a.HVCaseFK
 			-- pc1 name, dob, and SS# = b.PC1FK <-> PC.PCPK -> PC.PCLastName + PC.PCFirstName, PC.PCDOB, PC.SSNo
 			join PC on PC.PCPK = b.PC1FK
 			-- screen date = a.HVCaseFK <-> Kempe.HVCaseFK -> Kempe.KempeDate
@@ -130,7 +135,7 @@ as
 														   order by FormDate desc)
 
 			-- # of actual home visits since intake = a.HVCaseFK <-> HVLog.HVCaseFK, ProgramFK, 
-			-- VisitType <> '0001', VisitStartTime < @EndDt and VisitStartTime >= b.IntakeDate
+			-- substring(VisitType, 4, 1) <> '1', VisitStartTime < @EndDt and VisitStartTime >= b.IntakeDate
 
 			left outer join TCID T on T.HVCaseFK = b.HVCasePK and T.TCDOD is null
 
@@ -142,4 +147,5 @@ as
 			 --and  Worker.WorkerPK = isnull(@WorkerFK, Worker.WorkerPK)
 		--AND (@SiteFK = -1 OR (ISNULL(wp.SiteFK, -1) = @SiteFK))
 		order by [key01]
+
 GO

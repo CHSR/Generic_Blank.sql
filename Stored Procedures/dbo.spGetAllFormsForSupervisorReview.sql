@@ -35,22 +35,27 @@ begin
 		inner join WorkerProgram wp on wp.WorkerFK = w.WorkerPK
 		where programfk = @ProgramFK 
 				and current_timestamp between SupervisorStartDate and isnull(SupervisorEndDate,dateadd(dd,1,datediff(dd,0,getdate())))
-
-		--declare @Sups table
-		--@Sups = spGetAllWorkersByProgram @ProgramFK = 1 
-		--								, @EventDate = null
-		--								, @WorkerType = 'SUP'
-		--								, @AllWorkers = 0
-	),
-	cteFormReview as 
+	)	
+	, cteCohort as 
+	(
+		select max(CaseProgramPK) as CaseProgramPK
+			from CaseProgram cp
+			inner join FormReview fr on fr.HVCaseFK = cp.HVCaseFK
+									and fr.ProgramFK = cp.ProgramFK
+									and convert(date, FormDate) >= CaseStartDate
+									and convert(date, FormDate) between dateadd(day, @DaysToLoad * -1, current_timestamp) and current_timestamp
+			inner join SplitString(@ProgramFK, ',') ss on ss.ListItem = cp.ProgramFK
+			group by cp.HVCaseFK
+	)
+	, cteFormReview as 
 	(	
 		select FormReviewPK
 			  ,PC1ID
 			  ,codeFormName
-			  ,convert(varchar(10),FormDate,111) as FormDate
+			  ,convert(varchar(10),FormDate,101) as FormDate
 			  ,FormFK
 			  --,FormReviewCreateDate
-			  ,convert(varchar(10),FormReviewCreateDate,111) as FormReviewCreateDate
+			  ,convert(varchar(10),FormReviewCreateDate,101) as FormReviewCreateDate
 			  ,FormReviewCreator
 			  ,FormReviewEditDate
 			  ,FormReviewEditor
@@ -93,12 +98,12 @@ begin
 					when cp.CurrentFAWFK is not null then supfaw.WorkerName
 					else '*Unassigned*'
 				end as SupervisorName
-		from FormReview fr
+		from cteCohort co
+		inner join CaseProgram cp ON cp.CaseProgramPK = co.CaseProgramPK
+		inner join FormReview fr on fr.HVCaseFK = cp.HVCaseFK and fr.ProgramFK = cp.ProgramFK and FormDate >= CaseStartDate
 		inner join FormReviewOptions fro on fro.FormType = fr.FormType and fro.ProgramFK = isnull(@ProgramFK,fro.ProgramFK)
 		inner join codeForm f on codeFormAbbreviation = fr.FormType
-		inner join CaseProgram cp on cp.HVCaseFK = fr.HVCaseFK
-									and cp.ProgramFK = fr.ProgramFK
-		LEFT OUTER JOIN HVLog vl ON vl.ProgramFK = cp.ProgramFK AND fr.FormType = 'VL' AND fr.FormFK = vl.HVLogPK
+		left outer join HVLog vl on vl.ProgramFK = cp.ProgramFK and fr.FormType = 'VL' and fr.FormFK = vl.HVLogPK
 		left outer join WorkerProgram wpfsw on wpfsw.WorkerFK = cp.CurrentFSWFK and wpfsw.ProgramFK = @ProgramFK
 		left outer join WorkerProgram wpfaw on wpfaw.WorkerFK = cp.CurrentFAWFK and wpfaw.ProgramFK = @ProgramFK
 		left outer join Worker wfsw on wfsw.WorkerPK = wpfsw.WorkerFK
@@ -109,7 +114,7 @@ begin
 				and ReviewedBy is null
 				and FormDate between FormReviewStartDate and isnull(FormReviewEndDate, current_timestamp)
 				and FormDate between dateadd(day, @DaysToLoad*-1, isnull(FormReviewEndDate, current_timestamp)) and isnull(FormReviewEndDate, current_timestamp) 
-				AND CASE WHEN fr.FormType = 'VL' THEN CONVERT(CHAR(1), FormComplete) ELSE '1' END = '1'
+				and case when fr.FormType = 'VL' then FormComplete else 1 end = 1
 		union all 
 		select FormReviewPK
 			  ,case when len(rtrim(TrainingTitle)) <= 16 
@@ -237,4 +242,5 @@ begin
 				  --when fr.FormType='TR' then 20
 				  --when fr.FormType='VL' then 7	
 end
+
 GO

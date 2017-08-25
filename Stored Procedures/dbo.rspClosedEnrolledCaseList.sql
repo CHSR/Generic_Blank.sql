@@ -11,7 +11,7 @@ GO
 -- Edit date: 10/11/2013 CP - workerprogram was duplicating cases when worker transferred
 --            added this code to the workerprogram join condition: AND wp.programfk = listitem
 -- =============================================
-CREATE procedure [dbo].[rspClosedEnrolledCaseList]-- Add the parameters for the stored procedure here
+CREATE PROCEDURE [dbo].[rspClosedEnrolledCaseList]-- Add the parameters for the stored procedure here
     @programfk VARCHAR(MAX) = null,
     @StartDt   datetime,
     @EndDt     datetime,
@@ -68,7 +68,7 @@ set @programfk = REPLACE(@programfk,'"','')
 				join dbo.SplitString(@programfk,',') on cp1.programfk = listitem
 				inner join dbo.udfCaseFilters(@casefilterspositive, '', @programfk) cf on cf.HVCaseFK = cp1.HVCaseFK
 				inner join WorkerProgram wp1 on wp1.WorkerFK = cp1.CurrentFSWFK AND wp1.programfk = listitem
-				where VisitType <> '00010'
+				where SUBSTRING(VisitType, 4, 1) <> '1'
 					 and cast(VisitStartTime AS DATE) <= @EndDt
 					 and cast(VisitStartTime AS DATE) >= c.IntakeDate
 					 and HVLog.HVCaseFK = c.HVCasePK
@@ -124,7 +124,7 @@ set @programfk = REPLACE(@programfk,'"','')
 														   order by FormDate desc)
 
 			-- # of actual home visits since intake = cp.HVCaseFK <-> HVLog.HVCaseFK, ProgramFK, 
-			-- VisitType <> '0001', VisitStartTime < @EndDt and VisitStartTime >=  c.IntakeDate
+			-- SUBSTRING(VisitType, 4, 1) <> '1', VisitStartTime < @EndDt and VisitStartTime >=  c.IntakeDate
 
 			left outer join TCID T on T.HVCaseFK = c.HVCasePK
 			inner join dbo.udfCaseFilters(@casefilterspositive, '', @programfk) cf on cf.HVCaseFK = c.HVCasePK
@@ -133,4 +133,5 @@ set @programfk = REPLACE(@programfk,'"','')
 			 --and cp.ProgramFK = @programfk
 			 and (case when @SiteFK = 0 then 1 when wp.SiteFK = @SiteFK then 1 else 0 end = 1)
 		order by [key01]
+
 GO

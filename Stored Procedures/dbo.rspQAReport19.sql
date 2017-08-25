@@ -10,7 +10,7 @@ GO
 -- exec rspQAReport19 1, 'summary'
 -- exec rspQAReport19 1, 'detail'
 -- =============================================
-CREATE procedure [dbo].[rspQAReport19](
+CREATE PROCEDURE [dbo].[rspQAReport19](
 @programfk    varchar(max)    = NULL,
 @ReportType char(7) = NULL 
 
@@ -66,7 +66,7 @@ select hv.HVCaseFK
 		left join codeLevel cl on cp.CurrentLevelFK = cl.codeLevelPK
 		inner join Worker w on w.WorkerPK = cp.CurrentFSWFK
 		where cp.ProgramFK = @ProgramFK 
-				and hv.VisitType <> '00010'
+				and SUBSTRING(VisitType, 4, 1) <> '1'
 				and VisitStartTime >= @CutOffDate AND hv.VisitStartTime <=  @endDt
 				--and (cp.DischargeDate IS NULL  
 				--		or cp.DischargeDate > @LastDayofPreviousMonth)
@@ -115,5 +115,6 @@ else
 		where a.AttachmentPK is null
 		order by qarc.PC1ID, qarc.VisitStartTime
 	end		
+
 
 GO

@@ -7,26 +7,38 @@ GO
 -- Create date: 5/24/2012
 -- Description:	Newer Worker Assignment for transferred cases
 -- =============================================
-CREATE PROCEDURE [dbo].[spGetWorkerAssignmentbyProgram]
+CREATE procedure [dbo].[spGetWorkerAssignmentbyProgram]
 	-- Add the parameters for the stored procedure here
-	@hvcasefk as INT,
-	@programfk AS INT	
-AS
-BEGIN
+	@HVCaseFK as int
+  , @ProgramFK as int
+as
+	begin
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
+		set nocount on;
 
     -- Insert statements for procedure here
-	SELECT DISTINCT WorkerAssignmentPK, workerassignment.HVCaseFK, workerassignment.ProgramFK, 
-	CONVERT(varchar, WorkerAssignmentDate, 101) AS WrkrAssignmentDate, 
-	WorkerFK, CurrentFSWFK, FirstName + ' ' + LastName AS WorkerName, CaseProgramPK, WorkerAssignmentDate
-	FROM workerassignment 
-	INNER JOIN CaseProgram ON workerassignment.HVCasefk=CaseProgram.HVcasefk
-		AND CaseProgram.ProgramFK = @programfk
-	INNER JOIN Worker ON Worker.WorkerPK = workerassignment.workerfk
-	where workerassignment.hvcasefk=@hvcasefk
-	AND WorkerAssignment.ProgramFK=@programfk
-	ORDER BY WorkerAssignmentDate DESC
-END
+	with cteCaseProgram as
+		(select max(CaseProgramPK) as CaseProgramPK
+				, HVCaseFK
+			from CaseProgram cp
+			where HVCaseFK = @HVCaseFK
+					and ProgramFK = @ProgramFK
+			group by HVCaseFK)
+
+		select WorkerAssignmentPK
+			  , wa.HVCaseFK
+			  , wa.ProgramFK
+			  , convert(varchar, WorkerAssignmentDate, 101) as WrkrAssignmentDate
+			  , WorkerFK
+			  , rtrim(FirstName) + ' ' + rtrim(LastName) as WorkerName
+			  , CaseProgramPK
+			  , WorkerAssignmentDate
+		from	WorkerAssignment wa
+		inner join cteCaseProgram ccp on wa.HVCaseFK = ccp.HVCaseFK
+		inner join Worker on Worker.WorkerPK = wa.WorkerFK
+		where	wa.HVCaseFK = @HVCaseFK
+				and wa.ProgramFK = @ProgramFK
+		order by WorkerAssignmentDate desc;
+	end;
 GO

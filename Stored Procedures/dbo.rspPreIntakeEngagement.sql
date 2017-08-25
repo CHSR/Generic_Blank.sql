@@ -18,10 +18,11 @@ GO
 -- exec [rspPreIntakeEngagement] ',8,','10/01/2013' , '12/31/2013',null,0
 
 -- =============================================
-CREATE procedure [dbo].[rspPreIntakeEngagement](@programfk    varchar(max) = null,
-                                                        @sdate datetime,
-                                                        @edate datetime,                                                      
-                                                        @sitefk int = NULL,
+CREATE procedure [dbo].[rspPreIntakeEngagement](@programfk    varchar(max)    = null,
+                                                        @sdate        datetime,
+                                                        @edate        datetime,
+														@casefilterspositive varchar(100) = '',                                                        
+                                                        @sitefk int             = NULL,
                                                         @CustomQuarterlyDates bit                                                         
                                                         )
 
@@ -118,6 +119,7 @@ end as tcdob
 FROM HVCase h 
 INNER JOIN Kempe k ON k.HVCaseFK = h.HVCasePK
 INNER JOIN CaseProgram cp ON h.HVCasePK = cp.HVCaseFK
+inner join dbo.udfCaseFilters(@casefilterspositive, '', @programfk) cf on cf.HVCaseFK = h.HVCasePK 
 left JOIN Worker w ON w.WorkerPK = cp.CurrentFSWFK
 left JOIN WorkerProgram wp ON wp.WorkerFK = w.WorkerPK -- get SiteFK
 inner join dbo.SplitString(@programfk,',') on cp.programfk = listitem

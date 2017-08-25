@@ -22,7 +22,7 @@ GO
 -- Fixed Bug HW963 - Retention Rage Report ... Khalsa 3/20/2014
 -- =============================================
 -- =============================================
-CREATE procedure [dbo].[rspRetentionRates_MIECHV]
+CREATE PROCEDURE [dbo].[rspRetentionRates_MIECHV]
 	-- Add the parameters for the stored procedure here
 	@ProgramFK varchar(max)
 	, @StartDate datetime
@@ -352,7 +352,7 @@ SET NOCOUNT ON;
 			inner join HVCase c on c.HVCasePK = vl.HVCaseFK
 			inner join dbo.SplitString(@ProgramFK, ',') ss on ss.ListItem = vl.ProgramFK
 			inner join cteCohort co on co.HVCasePK = c.HVCasePK
-			where VisitType <> '0001' and 
+			where SUBSTRING(VisitType, 4, 1) <> '1' and 
 					(IntakeDate is not null and IntakeDate between @StartDate and @EndDate)
 							 -- and vl.ProgramFK = @ProgramFK
 			group by HVCaseFK
@@ -7635,4 +7635,5 @@ where LineGroupingLevel not in (6, 7, 9, 10, 12, 14, 15, 16, 17, 18, 21)
 --)AS unpvt;
 
 end
+
 GO

@@ -2,7 +2,8 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE PROCEDURE [dbo].[spAddWorkerProgram](@CommunityOutreach bit=NULL,
+CREATE PROCEDURE [dbo].[spAddWorkerProgram](@BackgroundCheckDate date=NULL,
+@CommunityOutreach bit=NULL,
 @DirectParticipantServices bit=NULL,
 @FatherAdvocate bit=NULL,
 @FatherAdvocateEndDate datetime=NULL,
@@ -26,10 +27,6 @@ CREATE PROCEDURE [dbo].[spAddWorkerProgram](@CommunityOutreach bit=NULL,
 @SupervisorFK int=NULL,
 @SupervisorStartDate datetime=NULL,
 @TerminationDate datetime=NULL,
-@WorkerFK int=NULL,
-@WorkerNotes varchar(500)=NULL,
-@WorkerProgramCreator char(10)=NULL,
-@WorkPhone char(12)=NULL,
 @TerminationReasonRetired bit=NULL,
 @TerminationReasonForbetterJob bit=NULL,
 @TerminationReasonMoved bit=NULL,
@@ -45,9 +42,13 @@ CREATE PROCEDURE [dbo].[spAddWorkerProgram](@CommunityOutreach bit=NULL,
 @TerminationReasonBackToSchool bit=NULL,
 @TerminationReasonOther bit=NULL,
 @TerminationReasonOtherSpecify varchar(50)=NULL,
-@BackgroundCheckDate date=NULL)
+@WorkerFK int=NULL,
+@WorkerNotes varchar(500)=NULL,
+@WorkerProgramCreator char(10)=NULL,
+@WorkPhone char(12)=NULL)
 AS
 INSERT INTO WorkerProgram(
+BackgroundCheckDate,
 CommunityOutreach,
 DirectParticipantServices,
 FatherAdvocate,
@@ -72,10 +73,6 @@ SupervisorEndDate,
 SupervisorFK,
 SupervisorStartDate,
 TerminationDate,
-WorkerFK,
-WorkerNotes,
-WorkerProgramCreator,
-WorkPhone,
 TerminationReasonRetired,
 TerminationReasonForbetterJob,
 TerminationReasonMoved,
@@ -91,9 +88,13 @@ TerminationReasonLossFunding,
 TerminationReasonBackToSchool,
 TerminationReasonOther,
 TerminationReasonOtherSpecify,
-BackgroundCheckDate
+WorkerFK,
+WorkerNotes,
+WorkerProgramCreator,
+WorkPhone
 )
 VALUES(
+@BackgroundCheckDate,
 @CommunityOutreach,
 @DirectParticipantServices,
 @FatherAdvocate,
@@ -118,10 +119,6 @@ VALUES(
 @SupervisorFK,
 @SupervisorStartDate,
 @TerminationDate,
-@WorkerFK,
-@WorkerNotes,
-@WorkerProgramCreator,
-@WorkPhone,
 @TerminationReasonRetired,
 @TerminationReasonForbetterJob,
 @TerminationReasonMoved,
@@ -137,7 +134,10 @@ VALUES(
 @TerminationReasonBackToSchool,
 @TerminationReasonOther,
 @TerminationReasonOtherSpecify,
-@BackgroundCheckDate
+@WorkerFK,
+@WorkerNotes,
+@WorkerProgramCreator,
+@WorkPhone
 )
 
 SELECT SCOPE_IDENTITY() AS [SCOPE_IDENTITY]

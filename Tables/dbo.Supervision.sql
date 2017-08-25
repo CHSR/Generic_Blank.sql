@@ -164,10 +164,10 @@ GO
 --				Supervision row has been edited
 -- =============================================
 CREATE trigger [dbo].[TR_SupervisionEditDate] ON [dbo].[Supervision]
-for update
-as
-update Supervision set Supervision.SupervisionEditDate = getdate()
-from [Supervision] inner join Inserted on [Supervision].[SupervisionPK]= Inserted.[SupervisionPK]
+For Update 
+AS
+Update Supervision Set Supervision.SupervisionEditDate= getdate()
+From [Supervision] INNER JOIN Inserted ON [Supervision].[SupervisionPK]= Inserted.[SupervisionPK]
 GO
 ALTER TABLE [dbo].[Supervision] ADD CONSTRAINT [PK__Supervis__3AC5E6F97D0E9093] PRIMARY KEY CLUSTERED  ([SupervisionPK]) ON [PRIMARY]
 GO

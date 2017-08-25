@@ -25,7 +25,7 @@ returns
 	hvlevelpk int,
 	reqvisit float,
 	hvlogpk int,
-	visittype varchar(5),
+	visittype varchar(6),
 	visitlengthminute int,
 	visitlengthhour int,
 	VisitStartTime datetime,
@@ -90,4 +90,5 @@ begin
 	return
 
 end
+
 GO

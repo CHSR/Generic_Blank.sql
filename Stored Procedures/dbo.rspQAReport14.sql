@@ -13,7 +13,7 @@ GO
 -- =============================================
 
 
-CREATE procedure [dbo].[rspQAReport14](
+CREATE PROCEDURE [dbo].[rspQAReport14](
 @programfk    varchar(max)    = NULL,
 @ReportType char(7) = NULL 
 
@@ -157,7 +157,7 @@ WITH cteHVLogRegularVisits AS
 		SELECT HVCaseFK FROM HVLog h 
 		inner join dbo.SplitString(@programfk,',') on h.programfk = listitem
 		WHERE cast(VisitStartTime AS DATE) BETWEEN @Back2MonthsFromAnalysisPoint AND @LastDayofPreviousMonth
-		AND VisitType <> '00010' -- all regular visits
+		AND SUBSTRING(VisitType, 4, 1) <> '1' -- all regular visits
 		GROUP BY HVCaseFK
 	
 )
@@ -182,7 +182,7 @@ WITH cteHVLogAttempted AS
 (
 	SELECT HVCaseFK,max(VisitStartTime) VisitStartTime FROM HVLog h 
 	inner join dbo.SplitString(@programfk,',') on h.programfk = listitem
-	WHERE VisitType = '00010' -- all attempted visits
+	WHERE SUBSTRING(VisitType, 4, 1) = '1' -- all attempted visits
 	GROUP BY HVCaseFK 
 	
 )
@@ -191,7 +191,7 @@ WITH cteHVLogAttempted AS
 (
 	SELECT HVCaseFK,max(VisitStartTime) VisitStartTime FROM HVLog h 
 	inner join dbo.SplitString(@programfk,',') on h.programfk = listitem
-	WHERE VisitType <> '00010' -- all regular visits
+	WHERE SUBSTRING(VisitType, 4, 1) <> '1' -- all regular visits
 	AND VisitStartTime < @LastDayofPreviousMonth
 	GROUP BY HVCaseFK 
 	
@@ -283,4 +283,5 @@ SELECT
 --- rspQAReport14 31 ,'summary'
 
 END
+
 GO

@@ -32,6 +32,8 @@ CREATE PROCEDURE [dbo].[spEditFollowUp](@FollowUpPK int=NULL,
 @FollowUpInterval char(2)=NULL,
 @FSWFK int=NULL,
 @FUPInWindow bit=NULL,
+@HealthCareCoverageContinuity bit=NULL,
+@HOMECompleted bit=NULL,
 @HVCaseFK int=NULL,
 @IFSPAdultRelationship char(1)=NULL,
 @IFSPChildDevelopment char(1)=NULL,
@@ -53,10 +55,8 @@ CREATE PROCEDURE [dbo].[spEditFollowUp](@FollowUpPK int=NULL,
 @ProgramFK int=NULL,
 @SafetyPlan bit=NULL,
 @SixMonthHome bit=NULL,
-@TimesPregnant int=NULL,
-@HealthCareCoverageContinuity bit=NULL,
-@HOMECompleted bit=NULL,
-@TCDentalCareSource char(2)=NULL)
+@TCDentalCareSource char(2)=NULL,
+@TimesPregnant int=NULL)
 AS
 UPDATE FollowUp
 SET 
@@ -89,6 +89,8 @@ FollowUpEditor = @FollowUpEditor,
 FollowUpInterval = @FollowUpInterval, 
 FSWFK = @FSWFK, 
 FUPInWindow = @FUPInWindow, 
+HealthCareCoverageContinuity = @HealthCareCoverageContinuity, 
+HOMECompleted = @HOMECompleted, 
 HVCaseFK = @HVCaseFK, 
 IFSPAdultRelationship = @IFSPAdultRelationship, 
 IFSPChildDevelopment = @IFSPChildDevelopment, 
@@ -110,9 +112,7 @@ Pregnant = @Pregnant,
 ProgramFK = @ProgramFK, 
 SafetyPlan = @SafetyPlan, 
 SixMonthHome = @SixMonthHome, 
-TimesPregnant = @TimesPregnant, 
-HealthCareCoverageContinuity = @HealthCareCoverageContinuity, 
-HOMECompleted = @HOMECompleted, 
-TCDentalCareSource = @TCDentalCareSource
+TCDentalCareSource = @TCDentalCareSource, 
+TimesPregnant = @TimesPregnant
 WHERE FollowUpPK = @FollowUpPK
 GO

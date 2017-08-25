@@ -17,7 +17,7 @@ GO
 -- Author:    <Jay Robohn>
 -- Description: <copied from FamSys Feb 20, 2012 - see header below>
 -- =============================================
-CREATE procedure [dbo].[rspRetentionRatesByDischargeReason_MIECHV]
+CREATE PROCEDURE [dbo].[rspRetentionRatesByDischargeReason_MIECHV]
 	-- Add the parameters for the stored procedure here
 	@ProgramFK varchar(max)
 	, @StartDate datetime
@@ -125,7 +125,7 @@ print @enddate
 			inner join HVCase c on c.HVCasePK = vl.HVCaseFK
 			inner join dbo.SplitString(@ProgramFK, ',') ss on ss.ListItem = vl.ProgramFK
 			inner join cteCohort co on co.HVCasePK = c.HVCasePK
-			where VisitType <> '0001' and 
+			where SUBSTRING(VisitType, 4, 1) <> '1' and 
 					(IntakeDate is not null and IntakeDate between @StartDate and @EndDate)
 							 -- and vl.ProgramFK = @ProgramFK
 			group by HVCaseFK
@@ -534,4 +534,5 @@ select LineGroupingLevel
 --from @tblResults
 
 end
+
 GO

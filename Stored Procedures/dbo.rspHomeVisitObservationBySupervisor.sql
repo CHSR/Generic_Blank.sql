@@ -2,7 +2,6 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-
 -- =============================================
 -- Author:    <Jay Robohn>
 -- Create date: <Feb 20, 2012>
@@ -11,7 +10,7 @@ GO
 -- is showing home visits without observations (Benjamin Simmons)
 -- Edit date: 5/30/17 Bug fix - Supervisor not always displaying correctly for FSWs that have no home visit observations
 -- =============================================
-CREATE procedure [dbo].[rspHomeVisitObservationBySupervisor]
+CREATE PROCEDURE [dbo].[rspHomeVisitObservationBySupervisor]
 (
     @programfk varchar(max)    = null,
     @sitefk		 int		   = null
@@ -85,9 +84,9 @@ as
 		  ,RTRIM(workerFirstName)+' '+RTRIM(workerLastName) fsw
 		  ,RTRIM(supervisorFirstName)+' '+RTRIM(supervisorLastName) supervisor
 		  ,case
-				when substring(visitType,1,1) = '1' or substring(visitType,2,1) = '1' then
+				when substring(visitType,1,1) = '1' or substring(visitType,2,1) = '1' or substring(visittype,3,1) = '1' then
 					'In Home'
-				when substring(visitType,3,1) = '1' then
+				when substring(visitType,5,1) = '1' then
 					'Out of Home'
 				when visitType is null then
 					''
@@ -100,5 +99,6 @@ as
 				,workerLastName
 				,VisitStartTime desc
 				,hvcasepk
+
 
 GO

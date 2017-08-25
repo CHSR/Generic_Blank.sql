@@ -20,7 +20,7 @@ GO
 
 -- exec [rspProgramInformationFor8Quarters] '31','2012-06-30'
 -- =============================================
-CREATE procedure [dbo].[rspProgramInformationFor8Quarters] (@programfk varchar(300) = null
+CREATE PROCEDURE [dbo].[rspProgramInformationFor8Quarters] (@programfk varchar(300) = null
 														 , @edate datetime
 														 , @sitefk int = 0
 														 , @casefilterspositive varchar(100) = ''  
@@ -1092,7 +1092,7 @@ as
 								and (h.DischargeDate is null
 									 or h.DischargeDate >= [QuarterStartDate]
 									) -- not discharged or discharged after the quarter start date	
-								and HVLog.VisitType <> '00010'
+								and SUBSTRING(VisitType,4,1) <> '1'
 					 ) ,
 				cteAllFamilies8aVisits
 				  as ( -- "8    a. Average Visits per Family"
@@ -1708,4 +1708,5 @@ as
 		drop table #tblInitial_cohort
 -- exec [rspProgramInformationFor8Quarters] '5','06/30/2012'
 	end
+
 GO

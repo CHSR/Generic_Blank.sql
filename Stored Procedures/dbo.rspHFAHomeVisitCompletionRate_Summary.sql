@@ -9,7 +9,7 @@ GO
 -- Edit date: 10/11/2013 CP - workerprogram was NOT duplicating transferred workers - YEAH!
 
 -- =============================================
-CREATE procedure [dbo].[rspHFAHomeVisitCompletionRate_Summary](@programfk    varchar(max)    = null,
+CREATE PROCEDURE [dbo].[rspHFAHomeVisitCompletionRate_Summary](@programfk    varchar(max)    = null,
                                                        @sdate        datetime,
                                                        @edate        datetime,
                                                        @supervisorfk int             = null,
@@ -50,19 +50,19 @@ begin
 							   and hvr.programfk = hld.programfk) as levelstart
 					,floor(reqvisit) as expvisitcount
 					,sum(case
-							 when visittype <> '00010' then
+							 when SUBSTRING(VisitType, 4, 1) <> '1' then
 								 1
 							 else
 								 0
 						 end) as actvisitcount
 					,sum(case
-							 when substring(visittype,1,1) = '1' or substring(visittype,2,1) = '1' then
+							 when substring(visittype,1,1) = '1' or substring(visittype,2,1) = '1' or substring(visittype,3,1) = '1' then
 								 1
 							 else
 								 0
 						 end) as inhomevisitcount
 					,sum(case
-							 when visittype = '00010' then
+							 when SUBSTRING(VisitType, 4, 1) = '1' then
 								 1
 							 else
 								 0
@@ -214,4 +214,5 @@ begin
 				,pc1id
 
 end
+
 GO

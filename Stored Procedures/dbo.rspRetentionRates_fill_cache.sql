@@ -339,7 +339,7 @@ create table #tmpCohort
 			inner join HVCase c on c.HVCasePK = vl.HVCaseFK
 			inner join dbo.SplitString(@ProgramFK, ',') ss on ss.ListItem = vl.ProgramFK
 			inner join #tmpCohort co on co.HVCasePK = c.HVCasePK
-			where VisitType <> '00010' and 
+			where SUBSTRING(VisitType, 4, 1) <> '1' and 
 					(IntakeDate is not null and IntakeDate between @StartDate and @EndDate)
 							 -- and vl.ProgramFK = @ProgramFK
 			group by HVCaseFK
@@ -6694,4 +6694,5 @@ from @tblResults
 --)AS unpvt;
 
 end
+
 GO

@@ -308,7 +308,7 @@ BEGIN
 			from HVLog  vl WITH (NOLOCK)
 			inner join hvcase c ON c.HVCasePK=vl.HVCaseFK 
 			inner join dbo.SplitString(@ProgramFK, ',') ss on ss.ListItem = vl.ProgramFK
-			where VisitType <> '0001' and 
+			where SUBSTRING(VisitType, 4, 1) <> '1' and 
 					(IntakeDate is not null and IntakeDate between @StartDate and @EndDate)
 						-- and vl.ProgramFK=@ProgramFK
 			group by HVCaseFK
@@ -721,6 +721,7 @@ from @tblPC1withStats
 order by pc1id, dischargereasoncode, RetentionMonths
 
 end
+
 
 
 GO

@@ -17,7 +17,6 @@ CREATE procedure [dbo].[rspCredentialingKempeAnalysis_Summary](
 	@StartDate DATETIME,
 	@EndDate DATETIME
 )
-WITH RECOMPILE
 AS
 DECLARE @programfkX varchar(max)
 DECLARE	@StartDateX DATETIME	 = @StartDate

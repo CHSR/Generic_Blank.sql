@@ -8,7 +8,7 @@ GO
 -- Author:		<Devinder Singh Khalsa>
 -- Create date: <August 2nd, 2012>
 -- Description:	<gets you data for Family Characteristics Quarterly and Contract Period>
--- exec [rspFamilyCharacteristics] ',1,','09/01/2010','11/30/2010',null,0
+-- exec [rspFamilyCharacteristics] ',1,','04/01/2016','11/30/2016',null,0
 -- exec [rspFamilyCharacteristics] ',1,','09/01/2010','11/30/2010',null,1
 -- exec rspFamilyCharacteristics '31','10/01/12','12/31/12',NULL,NULL
 -- =============================================
@@ -75,6 +75,8 @@ as
 				   , [LastDate] [datetime]
 				   , [TCAgeDays] [int]
 				   , [TCNumber] [int]
+				   , [TCGender] [varchar](2)
+				   , [TCRace] [varchar] (2)
 				   , [PC1Relation2TC] [char](2)
 				   , [PC2Relation2TC] [char](2)
 				   , [OBPRelation2TC] [char](2)
@@ -94,6 +96,8 @@ as
 				   , [LastDate] [datetime]
 				   , [TCAgeDays] [int]
 				   , [TCNumber] [int]
+				   , [TCGender] [varchar](2)
+				   , [TCRace] [varchar] (2)
 				   , [PC1Relation2TC] [char](2)
 				   , [PC2Relation2TC] [char](2)
 				   , [OBPRelation2TC] [char](2)
@@ -113,6 +117,8 @@ as
 				   , [LastDate] [datetime]
 				   , [TCAgeDays] [int]
 				   , [TCNumber] [int]
+				   , [TCGender] [varchar](2)
+				   , [TCRace] [varchar] (2)
 				   , [SiteFK] [int]
 					);
 			with	cteMain
@@ -132,6 +138,8 @@ as
 										 else @EndDate
 									end as lastdate
 								  , [TCNumber]
+								  , TC.TCGender
+								  , TC.Race as TCRace
 								  , [PC1Relation2TC]
 								  , [PC2Relation2TC]
 								  , [OBPRelation2TC]
@@ -143,11 +151,12 @@ as
 									end as SiteFK
 						  from		HVCase h
 						  inner join CaseProgram cp on h.HVCasePK = cp.HVCaseFK
+						  inner join dbo.SplitString(@ProgramFK,
+											',') on cp.programfk = listitem
 						  inner join Worker w on w.WorkerPK = cp.CurrentFSWFK
 						  inner join WorkerProgram wp on wp.WorkerFK = w.WorkerPK -- get SiteFK
 						  inner join PC P on P.PCPK = h.PC1FK
-						  inner join dbo.SplitString(@ProgramFK,
-											',') on cp.programfk = listitem
+						  left join TCID TC on TC.HVCaseFK = h.HVCasePK
 						 )
 				 -- SiteFK = isnull(@sitefk,SiteFK) does not work because column SiteFK may be null itself 
 	insert	into @tblInitRequiredData
@@ -160,6 +169,8 @@ as
 		   , [LastDate]
 		   , [TCAgeDays]
 		   , [TCNumber]
+		   , [TCGender]
+		   , [TCRace]
 		   , [PC1Relation2TC]
 		   , [PC2Relation2TC]
 		   , [OBPRelation2TC]
@@ -186,6 +197,8 @@ as
 						 when tcdob > lastdate then 0
 						 else TCNumber
 					end as TCNumber
+				  , [TCGender]
+				  , [TCRace]
 				  , [PC1Relation2TC]
 				  , [PC2Relation2TC]
 				  , [OBPRelation2TC]
@@ -205,6 +218,8 @@ as
 				   , [LastDate]
 				   , [TCAgeDays]
 				   , [TCNumber]
+				   , [TCGender]
+				   , [TCRace]
 				   , [PC1Relation2TC]
 				   , [PC2Relation2TC]
 				   , [OBPRelation2TC]
@@ -274,6 +289,8 @@ as
 										 then 1
 										 else TCNumber
 									end as Kidno2
+								  , [TCGender]
+								  , [TCRace]
 								  , [SiteFK]
 						  from		cteFamiliesIntake
 						  where		IntakeDate <= @EndDate
@@ -301,6 +318,8 @@ as
 		   , [LastDate]
 		   , [TCAgeDays]
 		   , [TCNumber]
+		   , [TCGender]
+		   , [TCRace]
 		   , [SiteFK]
 			 )
 			select	HVCasePK
@@ -310,7 +329,9 @@ as
 				  , DischargeDate
 				  , LastDate
 				  , TCAgeDays
-				  , (Kidno2 - isnull(s2.ngone, 0)) as Kidno2 -- substract out the dead tcs	
+				  , (Kidno2 - isnull(s2.ngone, 0)) as Kidno2 -- substract out the dead tcs
+				  , TCGender
+				  , TCRace	
 				  , SiteFK
 			from	cteKidsIntake ki
 			left join cteDeceasedChildren s2 on s2.HVCaseFK = ki.HVCasePK
@@ -413,6 +434,7 @@ as
 			declare	@nQC2e int
 			declare	@nQC2f int
 			declare	@nQC2g int
+			
 
 			declare	@tblTargetChildrenCurrent table
 					(
@@ -425,6 +447,8 @@ as
 				   , [LastDate] [datetime]
 				   , [TCAgeDays] [int]
 				   , [TCNumber] [int]
+				   , [TCGender] [varchar](2)
+				   , [TCRace] [varchar](2)
 				   , [PC1Relation2TC] [char](2)
 				   , [PC2Relation2TC] [char](2)
 				   , [OBPRelation2TC] [char](2)
@@ -444,6 +468,8 @@ as
 						  , [LastDate]
 						  , [TCAgeDays]
 						  , TCNumber
+						  , TCGender
+						  , TCRace
 						  , [PC1Relation2TC]
 						  , [PC2Relation2TC]
 						  , [OBPRelation2TC]
@@ -509,6 +535,131 @@ as
 						 )
 			set @nQC2g = isnull(@nQC2g, 0)
 
+	
+	--2.5 TC Race
+			declare @nQ25a int
+			declare @nQ25b int
+			declare @nQ25c int
+			declare @nQ25d int
+			declare @nQ25e int
+			declare @nQ25f int
+			declare @nQ25g int
+			declare @nQ25h int
+			
+			set @nQ25a = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCRace = '01')
+						 ), 0)
+			set @nQ25b = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCRace = '02')
+						 ), 0)
+			set @nQ25c = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCRace = '03')
+						 ), 0)
+			set @nQ25d = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCRace = '04')
+						 ), 0)
+			set @nQ25e = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCRace = '05')
+						 ), 0)
+			set @nQ25f = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCRace = '06')
+						 ), 0)
+			set @nQ25g = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCRace = '07')
+						 ), 0)
+			set @nQ25h = isnull((select sum(TCNumber) 
+						  from		@tblTargetChildren
+						  where		(TCRace is null or TCRace = '' or TCRace = ' ')
+						  ), 0)
+
+	--Current
+			declare @nQC25a int
+			declare @nQC25b int
+			declare @nQC25c int
+			declare @nQC25d int
+			declare @nQC25e int
+			declare @nQC25f int
+			declare @nQC25g int
+			declare @nQC25h int
+			
+			set @nQC25a = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCRace = '01')
+						 ), 0)
+			set @nQC25b = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCRace = '02')
+						 ), 0)
+			set @nQC25c = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCRace = '03')
+						 ), 0)
+			set @nQC25d = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCRace = '04')
+						 ), 0)
+			set @nQC25e = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCRace = '05')
+						 ), 0)
+			set @nQC25f = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCRace = '06')
+						 ), 0)
+			set @nQC25g = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCRace = '07')
+						 ), 0)
+			set @nQC25h = isnull((select sum(TCNumber) 
+						  from		@tblTargetChildrenCurrent
+						  where		(TCRace is null or TCRace = '' or TCRace = ' ')
+						  ), 0)
+			
+
+	-- 2.7. Gender
+			declare @nQ27a int
+			declare @nQ27b int
+			declare @nQ27c int
+			
+			set @nQ27a = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCGender = '01')
+						 ), '')
+			set @nQ27b = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCGender = '02')
+						 ), '')
+			set @nQ27c = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildren
+						  where 	(TCGender <> '01' and TCGender <> '02')
+						 ), 0)
+
+	--Current
+			declare @nQC27a int
+			declare @nQC27b int
+			declare @nQC27c int
+			
+			set @nQC27a = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCGender = '01')
+						 ), '')
+			set @nQC27b = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCGender = '02')
+						 ), '')
+			set @nQC27c = isnull((select	sum(TCNumber)
+						  from		@tblTargetChildrenCurrent
+						  where 	(TCGender <> '01' and TCGender <> '02')
+						 ), 0)
+
+	-- 2i. Race
 	-- Q3 --------------------------	
 	-- Quarterly
 			declare	@nQ3 int
@@ -754,7 +905,7 @@ as
 			declare	@nkQ4c int
 
 	-- 4. Primary Caretaker 1 Education
-			set @nQ4 = @nQ3 
+			set @nQ4 = @nQ3
 
 	-- 4a. Less than 12 years   --- NOT WORKING
 			set @nQ4a = (select	count(*) count1
@@ -797,8 +948,10 @@ as
 			set @nQ4c = @nQ4c + @nkQ4c
 
 	-- Q5 --------------------------	
-			declare	@nQ5 int
-			declare	@nkQ5 int
+			declare	@nQ5a int
+			declare	@nQ5b int
+			declare	@nQ5c int
+			--declare	@nkQ5 int
 
 	--select HVCasePK
 	--	 , caIntakePC1.[MaritalStatus] as PC1MaritalStatus
@@ -846,15 +999,30 @@ as
 	--		 or DischargeDate is null)
 
 	-- 5. Primary Caretaker 1 Married
-			set @nQ5 = (select	count(*) count1
-						from	@tblPC1Education
-						where	PC1MaritalStatus = '01'
+
+			declare @numPC1 int = (select count(HVCasePK)
+							   from	  @tblInitRequiredData2)
+
+			set @nQ5a = (select	count(HVCasePK) count1
+						from	@tblPC1Education kempe
+						where	kempe.PC1MaritalStatus = '01'
 					   )
-			set @nkQ5 = (select	count(*) count2
-						 from	@tblKempes
-						 where	PC1MaritalStatus = '01'
-						)
-			set @nQ5 = @nQ5 + @nkQ5
+
+			set @nQ5b = (select	count(HVCasePK) count1
+						from	@tblPC1Education kempe
+						where	kempe.PC1MaritalStatus = '02'
+					   )
+
+			set @nQ5c = (select	count(HVCasePK) count1
+						from	@tblPC1Education kempe
+						where	kempe.PC1MaritalStatus <> '01' and kempe.PC1MaritalStatus <> '02'
+					   )
+
+			--set @nkQ5 = (select	count(*) count2
+			--			 from	@tblKempes
+			--			 where	PC1MaritalStatus = '01'
+			--			)
+			--set @nQ5 = @nQ5 + @nkQ5
 
 	-- 6. Primary Caretaker 1 Race
 			declare	@nQ6 int
@@ -1532,6 +1700,264 @@ as
 					 + '%)'
 					)
 
+
+	--Q2.5
+	insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '2. Target Children Race'
+				   , @nQ2
+				   , @nQC2
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        a. White, non-Hispanic'
+				   , convert(varchar, @nQ25a) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ25a as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC25a) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC25a as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        b. Black, non-Hispanic'
+				   , convert(varchar, @nQ25b) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ25b as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC25b) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC25b as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        c. Hispanic/Latina/Latino'
+				   , convert(varchar, @nQ25c) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ25c as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC25c) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC25c as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        d. Asian'
+				   , convert(varchar, @nQ25d) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ25d as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC25d) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC25d as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        e. Native American'
+				   , convert(varchar, @nQ25e) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ25e as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC25e) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC25e as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        f. Multiracial'
+				   , convert(varchar, @nQ25f) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ25f as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC25f) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC25f as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        g. Other'
+				   , convert(varchar, @nQ25g) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ25g as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC25g) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC25g as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        h. Missing'
+				   , convert(varchar, @nQ25h) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ25h as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC25h) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC25h as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+	--Q2.7
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '2. Target Children Gender'
+				   , @nQ2
+				   , @nQC2
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        a. Male'
+				   , convert(varchar, @nQ27a) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ27a as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC27a) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC27a as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        b. Female'
+				   , convert(varchar, @nQ27b) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ27b as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC27b) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC27b as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(2
+				   , '        c. Missing'
+				   , convert(varchar, @nQ27c) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ27c as float)
+											* 100
+											/ nullif(@nQ2, 0),
+											0), 0)) + '%)'
+				   , convert(varchar, @nQC27c) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQC27c as float)
+											* 100
+											/ nullif(@nQC2,
+											0), 0), 0))
+					 + '%)'
+					)
+
 	--insert into @tblMainResult (iGroup
 	--						  ,	[Text]
 	--						  , [QuarterlyData]
@@ -1715,11 +2141,57 @@ as
 				   , [MostCurrentData]
 					)
 			values	(5
-				   , '5. Primary Caretaker 1 Married'
-				   , convert(varchar, @nQ5) + ' ('
-					 + convert(varchar, round(coalesce(cast(@nQ5 as float)
+				   , '5. Primary Caretaker 1 Marital Status'
+				   , convert(varchar, @numPC1)
+				   , convert(varchar, @numPC1)
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(5
+				   , '        a. Married'
+				   , convert(varchar, @nQ5a) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ5a as float)
 											* 100
-											/ nullif(@TotalNumberOfFamiliesAtIntakeQuarterly,
+											/ nullif(@numPC1,
+											0), 0), 0))
+					 + '%)'
+				   , ''
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(5
+				   , '        b. Not Married'
+				   , convert(varchar, @nQ5b) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ5b as float)
+											* 100
+											/ nullif(@numPC1,
+											0), 0), 0))
+					 + '%)'
+				   , ''
+					)
+
+			insert	into @tblMainResult
+					(iGroup
+				   , [Text]
+				   , [QuarterlyData]
+				   , [MostCurrentData]
+					)
+			values	(5
+				   , '        c. Missing'
+				   , convert(varchar, @nQ5c) + ' ('
+					 + convert(varchar, round(coalesce(cast(@nQ5c as float)
+											* 100
+											/ nullif(@numPC1,
 											0), 0), 0))
 					 + '%)'
 				   , ''
